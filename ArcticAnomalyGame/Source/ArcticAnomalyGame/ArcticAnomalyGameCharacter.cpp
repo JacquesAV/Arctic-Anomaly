@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/TriggerCapsule.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -39,6 +40,16 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+    // Create a trigger capsule component
+	TriggerCapsule= CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule"));
+	TriggerCapsule->InitCapsuleSize(55.f, 96.0f);
+	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	TriggerCapsule->SetupAttachment(RootComponent);
+
+	TriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AArcticAnomalyGameCharacter::OnOverlapBegin);
+	TriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AArcticAnomalyGameCharacter::OnOverlapEnd);
+
+	CurrentDoor = NULL;
 }
 
 void AArcticAnomalyGameCharacter::BeginPlay()
@@ -73,6 +84,9 @@ void AArcticAnomalyGameCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AArcticAnomalyGameCharacter::Look);
+
+		//Interact
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AArcticAnomalyGameCharacter::Interact);
 	}
 	else
 	{
@@ -93,6 +107,36 @@ void AArcticAnomalyGameCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
 }
+
+#pragma region Interact
+
+void AArcticAnomalyGameCharacter::Interact()
+{
+	if(CurrentDoor != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Door is opening"));
+		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+		CurrentDoor->ToggleDoor(ForwardVector);
+	}
+}
+
+void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr && OtherActor->GetClass()->IsChildOf(ASlidingDoor::StaticClass()))
+	{
+		CurrentDoor = Cast<ASlidingDoor>(OtherActor);
+	}
+}
+
+void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr )
+	{
+		CurrentDoor = NULL;
+	}
+}
+
+#pragma endregion
 
 void AArcticAnomalyGameCharacter::Look(const FInputActionValue& Value)
 {
