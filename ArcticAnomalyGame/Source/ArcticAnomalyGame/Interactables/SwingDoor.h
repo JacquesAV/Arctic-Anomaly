@@ -1,20 +1,20 @@
-﻿// Copyright (c) 2023, Stinky Cheese, All rights reserved.
+// Copyright (c) 2023, Stinky Cheese, All rights reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BaseDoor.h"
 #include "GameFramework/Actor.h"
-#include "SlidingDoor.generated.h"
+#include "SwingDoor.generated.h"
 
 UCLASS()
-class ARCTICANOMALYGAME_API ASlidingDoor : public ABaseDoor
+class ARCTICANOMALYGAME_API ASwingDoor : public ABaseDoor
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	ASlidingDoor();
+	ASwingDoor();
 
 public:
 	// Called every frame	
@@ -24,9 +24,9 @@ public:
 
 	virtual void ToggleDoor(FVector ForwardVector) override;
 
-	FVector DoorClosePosition;
-	FVector DoorCurrentPosition;
-	FVector DoorOpenPosition;
-	FVector DoorTargetPosition;
-	FVector AddPosition;
+	float DotProduct;
+	float MaxDegree;
+	float AddRotation;
+	float PosNeg;
+	float DoorCurrentRotation;
 };
