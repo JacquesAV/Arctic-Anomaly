@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Interactables/SlidingDoor.h"
+#include "Interactables/BaseDoor.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
 
@@ -72,7 +72,7 @@ public:
 	bool GetHasRifle();
 
 	/** Door functions */
-	ASlidingDoor* CurrentDoor;
+	ABaseDoor* CurrentDoor;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

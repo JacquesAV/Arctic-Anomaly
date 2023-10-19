@@ -114,17 +114,19 @@ void AArcticAnomalyGameCharacter::Interact()
 {
 	if(CurrentDoor != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Door is opening"));
 		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 		CurrentDoor->ToggleDoor(ForwardVector);
+	}else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Reference to current door is missing"));
 	}
 }
 
 void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr && OtherActor->GetClass()->IsChildOf(ASlidingDoor::StaticClass()))
+	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr && OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
 	{
-		CurrentDoor = Cast<ASlidingDoor>(OtherActor);
+		CurrentDoor = Cast<ABaseDoor>(OtherActor);
 	}
 }
 

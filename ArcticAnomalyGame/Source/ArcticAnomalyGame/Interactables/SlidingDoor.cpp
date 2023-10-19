@@ -3,66 +3,21 @@
 #include "SlidingDoor.h"
 //#include "ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
-#include "Kismet/GameplayStatics.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
 ASlidingDoor::ASlidingDoor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BOX Comp"));
-	BoxComp->InitBoxExtent(FVector(150, 100, 100));
-	BoxComp->SetCollisionProfileName("Trigger");
-	RootComponent = BoxComp;
-
-	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DOOR"));
-	DoorMesh->SetupAttachment(RootComponent);
-
-	//Create a door asset
-	DoorMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
-	DoorMesh->SetRelativeLocation(FVector(0.0f, 50.0f, -100.0f));
-	DoorMesh->SetWorldScale3D(FVector(1.0f));
-	DoorMesh->SetupAttachment(RootComponent);
-
-	isClosed = true;
-	Opening = false;
-	Closing = false;
-
 	DotProduct = 0.0f;
 	MaxDegree = 0.0f;
 	PosNeg = 0.0f;
 	DoorCurrentRotation = 0.0f;
 }
 
-// Called when the game starts or when spawned
-void ASlidingDoor::BeginPlay()
-{
-	Super::BeginPlay();
-
-	DrawDebugBox(GetWorld(), GetActorLocation(), BoxComp->GetScaledBoxExtent(), FQuat(GetActorRotation()),
-	             FColor::Turquoise, true, -1, 0, 2);
-}
-
-// Called every frame
-void ASlidingDoor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (Opening)
-	{
-		OpenDoor(DeltaTime);
-	}
-
-	if (Closing)
-	{
-		CloseDoor(DeltaTime);
-	}
-}
-
 void ASlidingDoor::OpenDoor(float deltaTime)
 {
+	Super::OpenDoor(deltaTime);
+
 	DoorCurrentRotation = DoorMesh->GetRelativeRotation().Yaw;
 
 	AddRotation = PosNeg * deltaTime * 80;
@@ -81,6 +36,8 @@ void ASlidingDoor::OpenDoor(float deltaTime)
 
 void ASlidingDoor::CloseDoor(float deltaTime)
 {
+	Super::CloseDoor(deltaTime);
+
 	DoorCurrentRotation = DoorMesh->GetRelativeRotation().Yaw;
 
 	if (DoorCurrentRotation > 0)
@@ -106,24 +63,11 @@ void ASlidingDoor::CloseDoor(float deltaTime)
 
 void ASlidingDoor::ToggleDoor(FVector ForwardVector)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Door is opening2"));
-	
+	Super::ToggleDoor(ForwardVector);
+
 	DotProduct = FVector::DotProduct(BoxComp->GetForwardVector(), ForwardVector);
 
 	PosNeg = FMath::Sign(DotProduct);
 
 	MaxDegree = PosNeg * 90;
-
-	if (isClosed)
-	{
-		isClosed = false;
-		Closing = false;
-		Opening = true;
-	}
-	else
-	{
-		Opening = false;
-		Closing = true;
-		isClosed = true;
-	}
 }
