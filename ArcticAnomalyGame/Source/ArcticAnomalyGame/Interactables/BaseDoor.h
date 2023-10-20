@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "BaseDoor.generated.h"
 
@@ -35,8 +36,13 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DoorMesh;
 
+	UPROPERTY(VisibleAnywhere, Category = "Collider")
+	UBoxComponent* ColliderComponent;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
 	UPROPERTY(VisibleAnywhere, Category = "Box Comps")
-	class UBoxComponent* BoxComp;
+	UBoxComponent* BoxComp;
 
 	bool Opening;
 	bool Closing;

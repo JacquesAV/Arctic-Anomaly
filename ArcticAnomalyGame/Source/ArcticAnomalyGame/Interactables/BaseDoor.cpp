@@ -12,7 +12,7 @@ ABaseDoor::ABaseDoor()
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BOX Comp"));
 	BoxComp->InitBoxExtent(FVector(150, 100, 100));
 	BoxComp->SetCollisionProfileName("Trigger");
-	RootComponent = BoxComp; 
+	RootComponent = BoxComp;
 
 	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DOOR"));
 	DoorMesh->SetupAttachment(RootComponent);
@@ -22,6 +22,12 @@ ABaseDoor::ABaseDoor()
 	DoorMesh->SetRelativeLocation(FVector(0.0f, 50.0f, -100.0f));
 	DoorMesh->SetWorldScale3D(FVector(1.0f));
 	DoorMesh->SetupAttachment(RootComponent);
+
+	ColliderComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
+	ColliderComponent->SetupAttachment(DoorMesh);
+
+	//Set the collider to prevent physics objects from moving through the door.
+	ColliderComponent->SetCollisionResponseToAllChannels(ECR_Block);
 
 	isClosed = true;
 	Opening = false;
@@ -74,5 +80,20 @@ void ABaseDoor::ToggleDoor(FVector ForwardVector)
 		Opening = false;
 		Closing = true;
 		isClosed = true;
+	}
+}
+
+void ABaseDoor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// Check if the property that was changed is the static mesh component
+	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(ABaseDoor, DoorMesh))
+	{
+		FBoxSphereBounds MeshBounds = DoorMesh->GetStaticMesh()->GetBounds();
+		FVector MeshExtent = MeshBounds.BoxExtent;
+		ColliderComponent->SetBoxExtent(MeshExtent);
+		
+		ColliderComponent->SetRelativeLocation(FVector(0.0f, -MeshExtent.Y, MeshExtent.Z));
 	}
 }
