@@ -13,6 +13,7 @@ ASlidingDoor::ASlidingDoor()
 	DoorClosePosition = DoorMesh->GetRelativeLocation();
 	DoorCurrentPosition = FVector(0.0f, 0.0f, 0.0f);
 	AddPosition = FVector(0.0f, 0.0f, 0.0f);
+	SlideSpeed=2.0f;
 }
 
 void ASlidingDoor::OpenDoor(float deltaTime)
@@ -20,7 +21,7 @@ void ASlidingDoor::OpenDoor(float deltaTime)
 	Super::OpenDoor(deltaTime);
 	
 	DoorCurrentPosition = DoorMesh->GetRelativeLocation();
-	AddPosition = FMath::Lerp(DoorCurrentPosition, DoorTargetPosition, deltaTime * 2);
+	AddPosition = FMath::Lerp(DoorCurrentPosition, DoorTargetPosition, deltaTime * SlideSpeed);
 	
 	if (DoorCurrentPosition.Equals(DoorTargetPosition, 0.25f))
 	{
@@ -38,7 +39,7 @@ void ASlidingDoor::CloseDoor(float deltaTime)
 	Super::CloseDoor(deltaTime);
 	
 	DoorCurrentPosition = DoorMesh->GetRelativeLocation();
-	AddPosition = FMath::Lerp(DoorCurrentPosition, DoorTargetPosition, deltaTime * 2);
+	AddPosition = FMath::Lerp(DoorCurrentPosition, DoorTargetPosition, deltaTime * SlideSpeed);
 	
 	if (DoorCurrentPosition.Equals(DoorTargetPosition, 0.25f))
 	{

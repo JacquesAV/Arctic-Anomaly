@@ -25,7 +25,11 @@ public:
 	virtual void ToggleDoor(FVector ForwardVector) override;
 
 	float DotProduct;
+	UPROPERTY(EditAnywhere)
 	float MaxDegree;
+	float CurrentDegreeLimit;
+	UPROPERTY(EditAnywhere)
+	float RotationSpeed;
 	float AddRotation;
 	float PosNeg;
 	float DoorCurrentRotation;

@@ -8,9 +8,11 @@
 ASwingDoor::ASwingDoor()
 {
 	DotProduct = 0.0f;
-	MaxDegree = 0.0f;
+	CurrentDegreeLimit = 0.0f;
 	PosNeg = 0.0f;
 	DoorCurrentRotation = 0.0f;
+	RotationSpeed=80.0f;
+	MaxDegree = 90.0f;
 }
 
 void ASwingDoor::OpenDoor(float deltaTime)
@@ -19,9 +21,9 @@ void ASwingDoor::OpenDoor(float deltaTime)
 
 	DoorCurrentRotation = DoorMesh->GetRelativeRotation().Yaw;
 
-	AddRotation = PosNeg * deltaTime * 80;
+	AddRotation = PosNeg * deltaTime * RotationSpeed;
 
-	if (FMath::IsNearlyEqual(DoorCurrentRotation, MaxDegree, 1.5f))
+	if (FMath::IsNearlyEqual(DoorCurrentRotation, CurrentDegreeLimit, 1.5f))
 	{
 		Closing = false;
 		Opening = false;
@@ -41,11 +43,11 @@ void ASwingDoor::CloseDoor(float deltaTime)
 
 	if (DoorCurrentRotation > 0)
 	{
-		AddRotation = -deltaTime * 80;
+		AddRotation = -deltaTime * RotationSpeed;
 	}
 	else
 	{
-		AddRotation = deltaTime * 80;
+		AddRotation = deltaTime * RotationSpeed;
 	}
 
 	if (FMath::IsNearlyEqual(DoorCurrentRotation, 0.0f, 1.5f))
@@ -68,5 +70,5 @@ void ASwingDoor::ToggleDoor(FVector ForwardVector)
 
 	PosNeg = FMath::Sign(DotProduct);
 
-	MaxDegree = PosNeg * 90;
+	CurrentDegreeLimit = PosNeg * MaxDegree;
 }

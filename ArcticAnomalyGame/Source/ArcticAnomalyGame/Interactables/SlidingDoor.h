@@ -24,9 +24,13 @@ public:
 
 	virtual void ToggleDoor(FVector ForwardVector) override;
 
+	UPROPERTY(EditAnywhere)
 	FVector DoorClosePosition;
-	FVector DoorCurrentPosition;
+	UPROPERTY(EditAnywhere)
 	FVector DoorOpenPosition;
+	FVector DoorCurrentPosition;
 	FVector DoorTargetPosition;
 	FVector AddPosition;
+	UPROPERTY(EditAnywhere)
+	float SlideSpeed;
 };
