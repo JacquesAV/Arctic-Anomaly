@@ -14,9 +14,6 @@ ABaseDoor::ABaseDoor()
 	BoxComp->SetCollisionProfileName("Trigger");
 	RootComponent = BoxComp;
 
-	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DOOR"));
-	DoorMesh->SetupAttachment(RootComponent);
-
 	//Create a door asset
 	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
 	DoorMesh->SetRelativeLocation(FVector(0.0f, 50.0f, -100.0f));
