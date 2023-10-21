@@ -53,11 +53,17 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UInputAction* InteractAction;
 	UCapsuleComponent* TriggerCapsule;
 
+	/**Inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	USceneComponent* HoldingComponent;
+
 public:
 	AArcticAnomalyGameCharacter();
 
 protected:
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Look Input Action */
@@ -94,6 +100,30 @@ public:
 
 	AItemPickup* CurrentItemPickup;
 
+	/*inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	class AInspectableObject* CurrentInspectable;
+
+	bool CanMove;
+	bool HoldingObject;
+	bool Inspecting;
+
+	float PitchMax;
+	float PitchMin;
+
+	FVector HoldingComp;
+	FRotator LastRotation;
+
+	//Used for drawing the debug line
+	FVector Start;
+	FVector ForwardVector;
+	FVector End;
+
+	FHitResult Hit;
+
+	FComponentQueryParams DefaultComponentQueryParams;
+	FCollisionResponseParams DefaultResponseParams;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -105,6 +135,13 @@ protected:
 	void Interact();
 
 	void DoorInteraction();
+
+	/**Inspection actions*/
+	void InspectInteraction();
+	void InspectReleased();
+
+	void ToggleMovement();
+	void ToggleObjectInspection();
 
 protected:
 	// APawn interface
