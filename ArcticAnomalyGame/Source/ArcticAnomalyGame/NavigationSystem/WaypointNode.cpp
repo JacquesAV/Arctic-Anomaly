@@ -2,9 +2,11 @@
 
 #include "WaypointNode.h"
 
+// TODO: Give the waypoint node a non-collision collider component to make it easier to select in the editor.
 // Sets default values.
 AWaypointNode::AWaypointNode()
 {
+	// TODO: Disable ticks in game builds.
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -53,6 +55,7 @@ void AWaypointNode::DebugVisuals() const
 	}
 }
 
+// TODO: Disable ticks in game builds.
 bool AWaypointNode::ShouldTickIfViewportsOnly() const
 {
 	return true;

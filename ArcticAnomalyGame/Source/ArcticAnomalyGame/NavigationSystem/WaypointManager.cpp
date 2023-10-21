@@ -2,6 +2,7 @@
 
 #include "WaypointManager.h"
 #include "WaypointNode.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AWaypointManager::AWaypointManager()
@@ -20,6 +21,25 @@ void AWaypointManager::BeginPlay()
 void AWaypointManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AWaypointManager::UpdateSpawnPoints()
+{
+	// Fetch all waypoint nodes in the level.
+	TArray<AActor*> WaypointNodes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWaypointNode::StaticClass(), WaypointNodes);
+
+	// Iterate through the waypoint nodes to find spawn points.
+	for (AActor* WaypointNode : WaypointNodes)
+	{
+		if (AWaypointNode* WaypointNodeCasted = Cast<AWaypointNode>(WaypointNode))
+		{
+			if (WaypointNodeCasted->IsSpawnPoint)
+			{
+				SpawnPoints.Add(WaypointNodeCasted);
+			}
+		}
+	}
 }
 
 AWaypointNode* AWaypointManager::GetNextWaypoint(const AWaypointNode* CurrentWaypoint) const
@@ -58,6 +78,18 @@ AWaypointNode* AWaypointManager::GetNextWaypoint(const AWaypointNode* CurrentWay
 	
 	// No connected waypoints are available.
 	return nullptr;
+}
+
+// Update the target waypoint.
+void AWaypointManager::UpdateTargetWaypoint(AWaypointNode* NewTargetWaypoint)
+{
+	TargetWaypoint = NewTargetWaypoint;
+}
+
+// Update the origin waypoint.
+void AWaypointManager::UpdateOriginWaypoint(AWaypointNode* NewOriginWaypoint)
+{
+	OriginWaypoint = NewOriginWaypoint;
 }
 
 // Reset the recently visited nodes array.
