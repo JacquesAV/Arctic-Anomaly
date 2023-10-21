@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interactables/BaseDoor.h"
+#include "InventorySystem/ItemPickup.h"
+#include "InventorySystem/Items/InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
 
@@ -30,6 +32,10 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
+	/** Inventory Component */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UInventoryComponent* Inventory;
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -46,7 +52,7 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 	UCapsuleComponent* TriggerCapsule;
-	
+
 public:
 	AArcticAnomalyGameCharacter();
 
@@ -54,7 +60,6 @@ protected:
 	virtual void BeginPlay();
 
 public:
-		
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -81,7 +86,13 @@ public:
 
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	/**Item Interaction*/
+	UFUNCTION(BlueprintCallable,Category="Items")
+	void ItemInteraction();
+
+	AItemPickup* CurrentItemPickup;
 
 protected:
 	/** Called for movement input */
@@ -93,6 +104,8 @@ protected:
 	/** Called for interaction input */
 	void Interact();
 
+	void DoorInteraction();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -103,6 +116,4 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
 };
-

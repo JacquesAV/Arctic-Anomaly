@@ -10,7 +10,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "InventorySystem/Items/Item.h"
 #include "Engine/TriggerCapsule.h"
+#include "InventorySystem/ItemPickup.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -21,15 +23,18 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 {
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
-	
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	//Setup Inventory
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
@@ -40,8 +45,8 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-    // Create a trigger capsule component
-	TriggerCapsule= CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule"));
+	// Create a trigger capsule component
+	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("TriggerCapsule"));
 	TriggerCapsule->InitCapsuleSize(55.f, 96.0f);
 	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
 	TriggerCapsule->SetupAttachment(RootComponent);
@@ -60,12 +65,12 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
+			UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -80,17 +85,23 @@ void AArcticAnomalyGameCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AArcticAnomalyGameCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this,
+		                                   &AArcticAnomalyGameCharacter::Move);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AArcticAnomalyGameCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this,
+		                                   &AArcticAnomalyGameCharacter::Look);
 
 		//Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AArcticAnomalyGameCharacter::Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
+		                                   &AArcticAnomalyGameCharacter::Interact);
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemplateCharacter, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
@@ -112,29 +123,53 @@ void AArcticAnomalyGameCharacter::Move(const FInputActionValue& Value)
 
 void AArcticAnomalyGameCharacter::Interact()
 {
-	if(CurrentDoor != nullptr)
+	DoorInteraction();
+	ItemInteraction();
+}
+
+void AArcticAnomalyGameCharacter::DoorInteraction()
+{
+	if (CurrentDoor != nullptr)
 	{
 		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 		CurrentDoor->ToggleDoor(ForwardVector);
-	}else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Reference to current door is missing"));
 	}
 }
 
-void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AArcticAnomalyGameCharacter::ItemInteraction()
 {
-	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr && OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
+	if (CurrentItemPickup!=nullptr && CurrentItemPickup->Item)
 	{
-		CurrentDoor = Cast<ABaseDoor>(OtherActor);
+		Inventory->AddItem(CurrentItemPickup->Item);
+		CurrentItemPickup->Destroy();
 	}
 }
 
-void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                                 const FHitResult& SweepResult)
 {
-	if(OtherActor!=nullptr&&OtherActor!=this&&OtherComp!=nullptr )
+	//make sure it doesnt overlap with itself
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr )
+	{
+		if(OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
+			CurrentDoor = Cast<ABaseDoor>(OtherActor);
+
+		if (OtherActor->GetClass()->IsChildOf(AItemPickup::StaticClass()))
+		{
+			AItemPickup* ItemPickup = Cast<AItemPickup>(OtherActor);
+			CurrentItemPickup =  ItemPickup;
+		}
+	}
+}
+
+void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
 	{
 		CurrentDoor = NULL;
+		CurrentItemPickup = NULL;
 	}
 }
 
