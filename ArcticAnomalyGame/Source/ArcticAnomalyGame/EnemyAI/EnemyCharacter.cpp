@@ -122,8 +122,17 @@ void AEnemyCharacter::FollowWaypoints()
 			// If the origin waypoint was reached (again), respawn instead.
 			if (WaypointManager->TargetWaypoint == WaypointManager->OriginWaypoint && WaypointManager->RecentlyVisitedNodes.Num() > 0)
 			{
-				// TODO: If the player is within LOS, continue patrolling until the player is out of LOS.
-				RespawnLogic();
+				if(bRespawnAfterPatrol)
+				{
+					// TODO: If the player is within LOS, continue patrolling until the player is out of LOS.
+					RespawnLogic();
+				}
+				else
+				{
+					// If not respawning after patrolling, clean the visited nodes and return.
+					// TODO: Have a visit count on the waypoints instead to avoid this issue and to make a more robust system.
+					WaypointManager->ResetVisits();
+				}
 				return;
 			}
 
@@ -143,7 +152,7 @@ void AEnemyCharacter::FollowWaypoints()
 		// If the target waypoint is null, log a warning and try to respawn.
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Target waypoint is null!"));
+			UE_LOG(LogTemp, Warning, TEXT("Target waypoint is null, forcing a respawn!"));
 			RespawnLogic();
 		}
 	}

@@ -27,8 +27,11 @@ public:
 	static bool IsPlayerInChaseRange();
 	void FollowWaypoints();
 
-	UPROPERTY(VisibleAnywhere, Category = "Management")
+	UPROPERTY(EditAnywhere, Category = "Management")
 	bool bIsAwake = false;
+
+	UPROPERTY(EditAnywhere, Category = "Management")
+	bool bRespawnAfterPatrol = true;
 
 	UPROPERTY(EditAnywhere, Category = "Management")
 	AWaypointManager* WaypointManager;
