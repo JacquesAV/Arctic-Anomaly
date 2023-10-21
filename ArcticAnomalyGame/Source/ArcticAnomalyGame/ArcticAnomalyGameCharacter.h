@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interactables/BaseDoor.h"
+#include "InventorySystem/ItemPickup.h"
 #include "InventorySystem/Items/InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
@@ -87,8 +88,11 @@ public:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	/**Item Interaction*/
 	UFUNCTION(BlueprintCallable,Category="Items")
-	void ItemInteraction(class UItem* Item);
+	void ItemInteraction();
+
+	AItemPickup* CurrentItemPickup;
 
 protected:
 	/** Called for movement input */

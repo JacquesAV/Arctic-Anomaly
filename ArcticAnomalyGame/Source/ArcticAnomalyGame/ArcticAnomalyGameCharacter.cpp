@@ -12,6 +12,7 @@
 #include "Engine/LocalPlayer.h"
 #include "InventorySystem/Items/Item.h"
 #include "Engine/TriggerCapsule.h"
+#include "InventorySystem/ItemPickup.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -123,6 +124,7 @@ void AArcticAnomalyGameCharacter::Move(const FInputActionValue& Value)
 void AArcticAnomalyGameCharacter::Interact()
 {
 	DoorInteraction();
+	ItemInteraction();
 }
 
 void AArcticAnomalyGameCharacter::DoorInteraction()
@@ -132,20 +134,14 @@ void AArcticAnomalyGameCharacter::DoorInteraction()
 		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 		CurrentDoor->ToggleDoor(ForwardVector);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Reference to current door is missing"));
-	}
 }
 
-void AArcticAnomalyGameCharacter::ItemInteraction(class UItem* Item)
+void AArcticAnomalyGameCharacter::ItemInteraction()
 {
-	if (Item)
+	if (CurrentItemPickup!=nullptr && CurrentItemPickup->Item)
 	{
-		Item->Use(this);
-		//Blueprint event
-		Item->OnUse(this);
-		
+		Inventory->AddItem(CurrentItemPickup->Item);
+		CurrentItemPickup->Destroy();
 	}
 }
 
@@ -153,10 +149,17 @@ void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* Overlapped
                                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                                  const FHitResult& SweepResult)
 {
-	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr && OtherActor->GetClass()->IsChildOf(
-		ABaseDoor::StaticClass()))
+	//make sure it doesnt overlap with itself
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr )
 	{
-		CurrentDoor = Cast<ABaseDoor>(OtherActor);
+		if(OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
+			CurrentDoor = Cast<ABaseDoor>(OtherActor);
+
+		if (OtherActor->GetClass()->IsChildOf(AItemPickup::StaticClass()))
+		{
+			AItemPickup* ItemPickup = Cast<AItemPickup>(OtherActor);
+			CurrentItemPickup =  ItemPickup;
+		}
 	}
 }
 
@@ -166,6 +169,7 @@ void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedCo
 	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
 	{
 		CurrentDoor = NULL;
+		CurrentItemPickup = NULL;
 	}
 }
 

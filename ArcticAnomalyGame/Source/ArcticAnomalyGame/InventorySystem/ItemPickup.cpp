@@ -14,8 +14,8 @@ AItemPickup::AItemPickup()
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
 	BoxCollider->SetGenerateOverlapEvents(true);
 	BoxCollider->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
-	BoxCollider->OnComponentBeginOverlap.AddDynamic(this, &AItemPickup::OnOverlapBegin);
 	BoxCollider->AttachToComponent(this->RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	BoxCollider->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMesh"));
 	ItemMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
@@ -36,24 +36,14 @@ void AItemPickup::Tick(float DeltaTime)
 
 }
 
-void AItemPickup::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	//Check if the OtherActor is not self and is not null
-	if(OtherActor!= nullptr && OtherActor != this && OtherComp != nullptr)
-	{
-		Destroy();
-	}
-}
-
 void AItemPickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AItemPickup, Item))
+	if (PropertyChangedEvent.Property)
 	{
 		//Create the item mesh based on the UItem mesh
-		if(Item && Item->PickupMesh)
+		if(PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AItemPickup, Item)&&Item && Item->PickupMesh)
 		{
 			// Create and attach a UStaticMeshComponent to represent the item's mesh
 			ItemMesh->SetStaticMesh(Item->PickupMesh);
