@@ -51,10 +51,12 @@ void AInspectableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//if the object is being held, move it to the holding component
 	if (holding && HoldingComponent)
 	{
 		SetActorLocationAndRotation(HoldingComponent->GetComponentLocation(), HoldingComponent->GetComponentRotation());
 	}
+	//if the object is not being held, and it is not in its original position, move it back to its original position
 	else if (!OriginalLocation.Equals(GetActorLocation(), 0.25f) && !OriginalRotation.Equals(GetActorRotation(), 0.25f))
 	{
 		//Slowly move it back to its original position
@@ -73,7 +75,7 @@ void AInspectableObject::Pickup()
 {
 	holding = !holding;
 
-	ObjectMesh->SetSimulatePhysics(holding ? false : true);
+	//ObjectMesh->SetSimulatePhysics(holding ? false : true);
 	ObjectMesh->SetCollisionEnabled(holding ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryAndPhysics);
 
 	if (!holding)

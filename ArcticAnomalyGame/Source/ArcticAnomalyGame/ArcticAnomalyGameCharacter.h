@@ -57,6 +57,10 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UPROPERTY(EditAnywhere)
 	USceneComponent* HoldingComponent;
 
+	/**Zoom in or Rotate object action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InspectAction;
+
 public:
 	AArcticAnomalyGameCharacter();
 
@@ -95,7 +99,7 @@ public:
 	                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	/**Item Interaction*/
-	UFUNCTION(BlueprintCallable,Category="Items")
+	UFUNCTION(BlueprintCallable, Category="Items")
 	void ItemInteraction();
 
 	AItemPickup* CurrentItemPickup;
@@ -104,9 +108,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	class AInspectableObject* CurrentInspectable;
 
+	UPROPERTY(EditAnywhere)
+	FVector InspectableObjectOffset;
+
 	bool CanMove;
-	bool HoldingObject;
-	bool Inspecting;
+	bool InspectingObject;
+	bool Zooming;
+	bool Rotating;
 
 	float PitchMax;
 	float PitchMin;
@@ -137,7 +145,8 @@ protected:
 	void DoorInteraction();
 
 	/**Inspection actions*/
-	void InspectInteraction();
+	void InspectObjectInteraction();
+	void InspectPressed();
 	void InspectReleased();
 
 	void ToggleMovement();

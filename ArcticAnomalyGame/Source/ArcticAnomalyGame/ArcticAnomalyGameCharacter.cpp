@@ -59,14 +59,14 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 
 	//Setup Inspection Component
 	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent"));
-	FVector HoldingComponentLocation = HoldingComponent->GetRelativeLocation();
-	HoldingComponent->SetRelativeLocation(FVector(HoldingComponentLocation.X, HoldingComponentLocation.Y,
-	                                              HoldingComponentLocation.Z));
-	HoldingComponent->SetupAttachment(RootComponent);
+	HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
+	HoldingComponent->SetupAttachment(FirstPersonCameraComponent);
 
 	CurrentInspectable = nullptr;
 	CanMove = true;
-	Inspecting = false;
+	Zooming = false;
+	Rotating = false;
+	InspectingObject = false;
 }
 
 void AArcticAnomalyGameCharacter::BeginPlay()
@@ -96,12 +96,11 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 	End = ((ForwardVector * 200.0f) + Start);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
-	if (!HoldingObject)
+	//If the player is not inspecting an object, check for one in front of the player
+	if (!InspectingObject)
 	{
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams,
-		                                         DefaultResponseParams))
+												 DefaultResponseParams))
 		{
 			if (Hit.GetActor()->GetClass()->IsChildOf(AInspectableObject::StaticClass()))
 			{
@@ -112,35 +111,33 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 		{
 			CurrentInspectable = nullptr;
 		}
+	}
 
-		if (Inspecting)
-		{
-			if (HoldingObject)
-			{
-				FirstPersonCameraComponent->SetFieldOfView(
-					FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
-
-				HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 50.0f));
-				GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.90000002f;
-				GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.90000002f;
-				CurrentInspectable->RotateActor();
-			}
-			else
-			{
-				FirstPersonCameraComponent->SetFieldOfView(
-					FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
-			}
-		}
-		else
-		{
-			FirstPersonCameraComponent->SetFieldOfView(
-				FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
-
-			if (HoldingObject)
-			{
-				HoldingComponent->SetRelativeLocation(FVector(50.0f, 0.0f, 0.0f));
-			}
-		}
+	//If the player is trying to rotate the object whilst they are inspecting
+	if(InspectingObject && Rotating)
+	{
+		HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.90000002f;
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.90000002f;
+		CurrentInspectable->RotateActor();
+	}
+	else
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = PitchMax;
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = PitchMin;
+	}
+	
+	//If the player is trying to zoom and they are not inspecting
+	if (Zooming)
+	{
+		FirstPersonCameraComponent->SetFieldOfView(
+			FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
+	}
+	//If the is no object to inspect and playing is not zooming, set the field of view back to normal
+	else
+	{
+		FirstPersonCameraComponent->SetFieldOfView(
+			FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
 	}
 }
 
@@ -166,6 +163,12 @@ void AArcticAnomalyGameCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		//Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
 		                                   &AArcticAnomalyGameCharacter::Interact);
+
+		//Inspecting
+		EnhancedInputComponent->BindAction(InspectAction, ETriggerEvent::Triggered, this,
+		                                   &AArcticAnomalyGameCharacter::InspectPressed);
+		EnhancedInputComponent->BindAction(InspectAction, ETriggerEvent::Completed, this,
+		                                   &AArcticAnomalyGameCharacter::InspectReleased);
 	}
 	else
 	{
@@ -221,7 +224,7 @@ void AArcticAnomalyGameCharacter::Interact()
 {
 	DoorInteraction();
 	ItemInteraction();
-	InspectInteraction();
+	InspectObjectInteraction();
 }
 
 void AArcticAnomalyGameCharacter::DoorInteraction()
@@ -274,56 +277,50 @@ void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedCo
 
 #pragma region Inspect
 
-//meant for on action originally
-/*if (CurrentInspectable && !Inspecting)
+void AArcticAnomalyGameCharacter::InspectObjectInteraction()
 {
-	ToggleObjectInspection();
-}*/
-
-void AArcticAnomalyGameCharacter::InspectInteraction()
-{
-	if (HoldingObject)
+	if (CurrentInspectable)
 	{
-		LastRotation = GetControlRotation();
+		ToggleObjectInspection();
 		ToggleMovement();
 	}
-	else
-	{
-		Inspecting = true;
-	}
+}
+
+void AArcticAnomalyGameCharacter::InspectPressed()
+{
+		Zooming = true;
 }
 
 void AArcticAnomalyGameCharacter::InspectReleased()
 {
-	if (Inspecting && HoldingObject)
-	{
-		GetController()->SetControlRotation(LastRotation);
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = PitchMax;
-		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = PitchMin;
-		ToggleMovement();
-	}
-	else
-	{
-		Inspecting = false;
-	}
+		Zooming = false;
 }
 
+//Return the player to normal movement
 void AArcticAnomalyGameCharacter::ToggleMovement()
 {
 	CanMove = !CanMove;
-	Inspecting = !Inspecting;
+	Rotating = !Rotating;
 	FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
 	bUseControllerRotationYaw = !bUseControllerRotationYaw;
+	//log the last rotation
+	if(CanMove)
+		GetController()->SetControlRotation(LastRotation);
+	else
+		LastRotation = GetControlRotation();
 }
 
 void AArcticAnomalyGameCharacter::ToggleObjectInspection()
 {
+	//If the player is looking at an inspectable object
 	if (CurrentInspectable)
 	{
-		HoldingObject = !HoldingObject;
+		//Start inspecting the object that the player is viewing
+		InspectingObject = !InspectingObject;
 		CurrentInspectable->Pickup();
 
-		if(!HoldingObject)
+		//if the player is not inspecting anything, set to null
+		if(!InspectingObject)
 			CurrentInspectable = nullptr;
 	}
 }
