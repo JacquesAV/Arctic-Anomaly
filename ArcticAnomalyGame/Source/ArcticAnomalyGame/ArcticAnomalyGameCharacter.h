@@ -53,11 +53,21 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UInputAction* InteractAction;
 	UCapsuleComponent* TriggerCapsule;
 
+	/**Inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	USceneComponent* HoldingComponent;
+
+	/**Zoom in or Rotate object action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InspectAction;
+
 public:
 	AArcticAnomalyGameCharacter();
 
 protected:
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Look Input Action */
@@ -89,10 +99,38 @@ public:
 	                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	/**Item Interaction*/
-	UFUNCTION(BlueprintCallable,Category="Items")
+	UFUNCTION(BlueprintCallable, Category="Items")
 	void ItemInteraction();
 
 	AItemPickup* CurrentItemPickup;
+
+	/*inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	class AInspectableObject* CurrentInspectable;
+
+	UPROPERTY(EditAnywhere)
+	FVector InspectableObjectOffset;
+
+	bool CanMove;
+	bool InspectingObject;
+	bool Zooming;
+	bool Rotating;
+
+	float PitchMax;
+	float PitchMin;
+
+	FVector HoldingComp;
+	FRotator LastRotation;
+
+	//Used for drawing the debug line
+	FVector Start;
+	FVector ForwardVector;
+	FVector End;
+
+	FHitResult Hit;
+
+	FComponentQueryParams DefaultComponentQueryParams;
+	FCollisionResponseParams DefaultResponseParams;
 
 protected:
 	/** Called for movement input */
@@ -105,6 +143,14 @@ protected:
 	void Interact();
 
 	void DoorInteraction();
+
+	/**Inspection actions*/
+	void InspectObjectInteraction();
+	void InspectPressed();
+	void InspectReleased();
+
+	void ToggleMovement();
+	void ToggleObjectInspection();
 
 protected:
 	// APawn interface

@@ -12,6 +12,7 @@
 #include "Engine/LocalPlayer.h"
 #include "InventorySystem/Items/Item.h"
 #include "Engine/TriggerCapsule.h"
+#include "Interactables/InspectableObject.h"
 #include "InventorySystem/ItemPickup.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -55,6 +56,17 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 	TriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AArcticAnomalyGameCharacter::OnOverlapEnd);
 
 	CurrentDoor = NULL;
+
+	//Setup Inspection Component
+	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent"));
+	HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
+	HoldingComponent->SetupAttachment(FirstPersonCameraComponent);
+
+	CurrentInspectable = nullptr;
+	CanMove = true;
+	Zooming = false;
+	Rotating = false;
+	InspectingObject = false;
 }
 
 void AArcticAnomalyGameCharacter::BeginPlay()
@@ -70,6 +82,62 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+
+	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
+	PitchMin = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin;
+}
+
+void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	Start = FirstPersonCameraComponent->GetComponentLocation();
+	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+	End = ((ForwardVector * 200.0f) + Start);
+
+	//If the player is not inspecting an object, check for one in front of the player
+	if (!InspectingObject)
+	{
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams,
+												 DefaultResponseParams))
+		{
+			if (Hit.GetActor()->GetClass()->IsChildOf(AInspectableObject::StaticClass()))
+			{
+				CurrentInspectable = Cast<AInspectableObject>(Hit.GetActor());
+			}
+		}
+		else
+		{
+			CurrentInspectable = nullptr;
+		}
+	}
+
+	//If the player is trying to rotate the object whilst they are inspecting
+	if(InspectingObject && Rotating)
+	{
+		HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.90000002f;
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.90000002f;
+		CurrentInspectable->RotateActor();
+	}
+	else
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = PitchMax;
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = PitchMin;
+	}
+	
+	//If the player is trying to zoom and they are not inspecting
+	if (Zooming)
+	{
+		FirstPersonCameraComponent->SetFieldOfView(
+			FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
+	}
+	//If the is no object to inspect and playing is not zooming, set the field of view back to normal
+	else
+	{
+		FirstPersonCameraComponent->SetFieldOfView(
+			FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
 	}
 }
 
@@ -95,6 +163,12 @@ void AArcticAnomalyGameCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		//Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
 		                                   &AArcticAnomalyGameCharacter::Interact);
+
+		//Inspecting
+		EnhancedInputComponent->BindAction(InspectAction, ETriggerEvent::Triggered, this,
+		                                   &AArcticAnomalyGameCharacter::InspectPressed);
+		EnhancedInputComponent->BindAction(InspectAction, ETriggerEvent::Completed, this,
+		                                   &AArcticAnomalyGameCharacter::InspectReleased);
 	}
 	else
 	{
@@ -108,6 +182,8 @@ void AArcticAnomalyGameCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 
 void AArcticAnomalyGameCharacter::Move(const FInputActionValue& Value)
 {
+	if (!CanMove)
+		return;
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -118,62 +194,6 @@ void AArcticAnomalyGameCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
 }
-
-#pragma region Interact
-
-void AArcticAnomalyGameCharacter::Interact()
-{
-	DoorInteraction();
-	ItemInteraction();
-}
-
-void AArcticAnomalyGameCharacter::DoorInteraction()
-{
-	if (CurrentDoor != nullptr)
-	{
-		FVector ForwardVector = FirstPersonCameraComponent->GetForwardVector();
-		CurrentDoor->ToggleDoor(ForwardVector);
-	}
-}
-
-void AArcticAnomalyGameCharacter::ItemInteraction()
-{
-	if (CurrentItemPickup!=nullptr && CurrentItemPickup->Item)
-	{
-		Inventory->AddItem(CurrentItemPickup->Item);
-		CurrentItemPickup->Destroy();
-	}
-}
-
-void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-                                                 const FHitResult& SweepResult)
-{
-	//make sure it doesnt overlap with itself
-	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr )
-	{
-		if(OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
-			CurrentDoor = Cast<ABaseDoor>(OtherActor);
-
-		if (OtherActor->GetClass()->IsChildOf(AItemPickup::StaticClass()))
-		{
-			AItemPickup* ItemPickup = Cast<AItemPickup>(OtherActor);
-			CurrentItemPickup =  ItemPickup;
-		}
-	}
-}
-
-void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
-	{
-		CurrentDoor = NULL;
-		CurrentItemPickup = NULL;
-	}
-}
-
-#pragma endregion
 
 void AArcticAnomalyGameCharacter::Look(const FInputActionValue& Value)
 {
@@ -197,3 +217,113 @@ bool AArcticAnomalyGameCharacter::GetHasRifle()
 {
 	return bHasRifle;
 }
+
+#pragma region Interact
+
+void AArcticAnomalyGameCharacter::Interact()
+{
+	DoorInteraction();
+	ItemInteraction();
+	InspectObjectInteraction();
+}
+
+void AArcticAnomalyGameCharacter::DoorInteraction()
+{
+	if (CurrentDoor != nullptr)
+	{
+		ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+		CurrentDoor->ToggleDoor(ForwardVector);
+	}
+}
+
+void AArcticAnomalyGameCharacter::ItemInteraction()
+{
+	if (CurrentItemPickup != nullptr && CurrentItemPickup->Item)
+	{
+		Inventory->AddItem(CurrentItemPickup->Item);
+		CurrentItemPickup->Destroy();
+	}
+}
+
+void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                                 const FHitResult& SweepResult)
+{
+	//make sure it doesnt overlap with itself
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
+	{
+		if (OtherActor->GetClass()->IsChildOf(ABaseDoor::StaticClass()))
+			CurrentDoor = Cast<ABaseDoor>(OtherActor);
+
+		if (OtherActor->GetClass()->IsChildOf(AItemPickup::StaticClass()))
+		{
+			AItemPickup* ItemPickup = Cast<AItemPickup>(OtherActor);
+			CurrentItemPickup = ItemPickup;
+		}
+	}
+}
+
+void AArcticAnomalyGameCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
+	{
+		CurrentDoor = NULL;
+		CurrentItemPickup = NULL;
+	}
+}
+
+#pragma endregion
+
+#pragma region Inspect
+
+void AArcticAnomalyGameCharacter::InspectObjectInteraction()
+{
+	if (CurrentInspectable)
+	{
+		ToggleObjectInspection();
+		ToggleMovement();
+	}
+}
+
+void AArcticAnomalyGameCharacter::InspectPressed()
+{
+		Zooming = true;
+}
+
+void AArcticAnomalyGameCharacter::InspectReleased()
+{
+		Zooming = false;
+}
+
+//Return the player to normal movement
+void AArcticAnomalyGameCharacter::ToggleMovement()
+{
+	CanMove = !CanMove;
+	Rotating = !Rotating;
+	FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
+	bUseControllerRotationYaw = !bUseControllerRotationYaw;
+	//log the last rotation
+	if(CanMove)
+		GetController()->SetControlRotation(LastRotation);
+	else
+		LastRotation = GetControlRotation();
+}
+
+void AArcticAnomalyGameCharacter::ToggleObjectInspection()
+{
+	//If the player is looking at an inspectable object
+	if (CurrentInspectable)
+	{
+		//Start inspecting the object that the player is viewing
+		InspectingObject = !InspectingObject;
+		CurrentInspectable->Pickup();
+
+		//if the player is not inspecting anything, set to null
+		if(!InspectingObject)
+			CurrentInspectable = nullptr;
+	}
+}
+
+
+#pragma endregion
