@@ -35,9 +35,6 @@ ABaseDoor::ABaseDoor()
 void ABaseDoor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	DrawDebugBox(GetWorld(), GetActorLocation(), BoxComp->GetScaledBoxExtent(), FQuat(GetActorRotation()),
-	             FColor::Turquoise, true, -1, 0, 2);
 }
 
 // Called every frame
