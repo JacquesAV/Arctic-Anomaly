@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interactables/BaseDoor.h"
+#include "InventorySystem/ItemPickup.h"
+#include "InventorySystem/Items/InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
 
@@ -29,6 +32,10 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
+	/** Inventory Component */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UInventoryComponent* Inventory;
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -40,18 +47,32 @@ class AArcticAnomalyGameCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-	
+
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InteractAction;
+	UCapsuleComponent* TriggerCapsule;
+
+	/**Inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	USceneComponent* HoldingComponent;
+
+	/**Zoom in or Rotate object action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InspectAction;
+
 public:
 	AArcticAnomalyGameCharacter();
 
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaTime) override;
+
 public:
-		
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+	UInputAction* LookAction;
 
 	/** Bool for AnimBP to switch to another animation set */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
@@ -65,12 +86,71 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
 
+	/** Door functions */
+	ABaseDoor* CurrentDoor;
+
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	                    const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	/**Item Interaction*/
+	UFUNCTION(BlueprintCallable, Category="Items")
+	void ItemInteraction();
+
+	AItemPickup* CurrentItemPickup;
+
+	/*inspectable actions*/
+	UPROPERTY(EditAnywhere)
+	class AInspectableObject* CurrentInspectable;
+
+	UPROPERTY(EditAnywhere)
+	FVector InspectableObjectOffset;
+
+	bool CanMove;
+	bool InspectingObject;
+	bool Zooming;
+	bool Rotating;
+
+	float PitchMax;
+	float PitchMin;
+
+	FVector HoldingComp;
+	FRotator LastRotation;
+
+	//Used for drawing the debug line
+	FVector Start;
+	FVector ForwardVector;
+	FVector End;
+
+	FHitResult Hit;
+
+	FComponentQueryParams DefaultComponentQueryParams;
+	FCollisionResponseParams DefaultResponseParams;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	/** Called for interaction input */
+	void Interact();
+
+	void DoorInteraction();
+
+	/**Inspection actions*/
+	void InspectObjectInteraction();
+	void InspectPressed();
+	void InspectReleased();
+
+	void ToggleMovement();
+	void ToggleObjectInspection();
 
 protected:
 	// APawn interface
@@ -82,6 +162,4 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
 };
-
