@@ -57,6 +57,9 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 
 	CurrentDoor = NULL;
 
+	//initialise the data manager
+	DataManager = CreateDefaultSubobject<UCustomDataManager>(TEXT("DataManager"));
+
 	//Setup Inspection Component
 	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent"));
 	HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
@@ -74,6 +77,13 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	//iterate through the required items and add them to the DataManagerArray and set the value to false
+	for (int i = 0; i < RequiredItems.Num(); i++)
+	{
+		FItemBoolPair NewPair(RequiredItems[i], false);
+		DataManager->AddKeyValuePair(NewPair);
+	}
+	
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -82,6 +92,15 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+
+	//iterate through the required items and log the value of each dataManager keyvalue pair
+	for (int i = 0; i < RequiredItems.Num(); i++)
+	{
+		bool Value;
+		DataManager->GetValueForKey(RequiredItems[i], Value);
+		UE_LOG(LogTemp, Warning, TEXT("Key: %s Value: %s"), *RequiredItems[i]->ItemDisplayName.ToString(),
+		       Value ? TEXT("True") : TEXT("False"));
 	}
 
 	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
@@ -240,7 +259,13 @@ void AArcticAnomalyGameCharacter::ItemInteraction()
 {
 	if (CurrentItemPickup != nullptr && CurrentItemPickup->Item)
 	{
-		Inventory->AddItem(CurrentItemPickup->Item);
+		if(Inventory->AddItem(CurrentItemPickup->Item))
+		{
+			//find the item in the data manager and set the value to true
+			DataManager->SetValueForKey(CurrentItemPickup->Item, true);
+
+			//TODO: If all items are true then the player has won, they just need to exit the building at to the watchtower.
+		}
 		CurrentItemPickup->Destroy();
 	}
 }

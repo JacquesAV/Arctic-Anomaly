@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Interactables/BaseDoor.h"
 #include "InventorySystem/ItemPickup.h"
+#include "InventorySystem/Items/FItemBoolPair.h"
 #include "InventorySystem/Items/InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
@@ -103,6 +104,13 @@ public:
 	void ItemInteraction();
 
 	AItemPickup* CurrentItemPickup;
+
+	//array of FItemBoolPair
+	UCustomDataManager* DataManager;
+
+	//array of required items
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Items")
+	TArray<UItem*> RequiredItems;
 
 	/*inspectable actions*/
 	UPROPERTY(EditAnywhere)
