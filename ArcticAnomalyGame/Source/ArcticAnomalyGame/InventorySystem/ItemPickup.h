@@ -28,7 +28,7 @@ public:
 	UPROPERTY(EditAnywhere, Category="Item")
 	UItem* Item;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* ItemMesh;
 	
 	UPROPERTY(EditAnywhere)
