@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "WaypointNode.generated.h"
 
@@ -28,6 +29,9 @@ public:
 	// Gives a transform to the waypoint node.
 	UPROPERTY()
 	USceneComponent* Root;
+
+	UPROPERTY()
+	UBoxComponent* EditorBoxCollider;
 	
 	// Array to store references to connected waypoints.
 	UPROPERTY(EditAnywhere, Category = "Waypointing")
@@ -36,4 +40,17 @@ public:
 	// Boolean to determine if waypoint is a spawn point.
 	UPROPERTY(EditAnywhere, Category = "Waypointing")
 	bool IsSpawnPoint;
+
+	// If true, the waypoint will be drawn during play.
+	UPROPERTY(EditAnywhere, Category = "Waypointing")
+	bool bDebugInPlay = false;
+
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	float DebugHeight = 300;
+	
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	float DebugRadius = 150;
+	
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	float DebugThickness = 5;
 };

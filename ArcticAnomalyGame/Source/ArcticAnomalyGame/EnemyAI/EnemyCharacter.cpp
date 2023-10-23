@@ -1,6 +1,8 @@
 // Copyright (c) 2023, Stinky Cheese, All rights reserved.
 
 #include "EnemyCharacter.h"
+
+#include "ArcticAnomalyGame/Interactables/BaseDoor.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -88,6 +90,8 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		return;
 	}
 	
+	TryOpenDoor();
+	
 	// Check if the player is within the chase range
 	if (IsPlayerInChaseRange())
 	{
@@ -109,6 +113,57 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 bool AEnemyCharacter::IsPlayerInChaseRange()
 {
 	return false;
+}
+
+// TODO: Replace the sweep check with something simpler or something with less overhead.
+void AEnemyCharacter::TryOpenDoor() const
+{
+	// Create a box-shaped collision channel to check if the enemy is looking at the door.
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	
+	const FVector Start = GetActorLocation() + FVector(0, 0, DetectionHeightOffset);
+	const FVector End = Start + GetActorForwardVector() * DoorDetectionDistance;
+	const float HalfSideSize = DoorHandlingSideSize/2;
+	const FVector HalfExtents = FVector(DoorDetectionDistance, HalfSideSize, HalfSideSize);
+	TArray<FHitResult> HitResults;
+	FColor DebugColor = FColor::Cyan;
+	
+	if (GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, ECC_WorldDynamic, FCollisionShape::MakeBox(HalfExtents), QueryParams))
+	{
+		for (const FHitResult& HitResult : HitResults)
+		{
+			// Check if the hit component is the expected type.
+			UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+			if (HitComponent->IsA(UBoxComponent::StaticClass()))
+			{
+				// Check for the expected name.
+				UBoxComponent* Collider = Cast<UBoxComponent>(HitComponent);
+				if (!Collider || Collider->GetName() != "Collider")
+				{
+					continue;
+				}
+				
+				// Handle the door logic.
+				AActor* HitActor = HitResult.GetActor();
+				if (ABaseDoor* Door = Cast<ABaseDoor>(HitActor))
+				{
+					if (Door->isClosed)
+					{
+						Door->ForceOpenDoor(GetActorForwardVector());
+						DebugColor = FColor::Orange;
+						UE_LOG(LogTemp, Warning, TEXT("Enemy is opening door: %s"), *HitActor->GetName());
+					}
+				}
+			}
+		}
+	}
+	
+	// Draw a debug box to visualize the box cast.
+	FVector Center = Start + (GetActorForwardVector() * DoorDetectionDistance * 0.5f);
+	FVector Extent = FVector(DoorDetectionDistance * 0.5f, HalfSideSize, HalfSideSize);
+	FQuat RotationQuat = FQuat(GetActorForwardVector().Rotation());
+	DrawDebugBox(GetWorld(), Center, Extent, RotationQuat, DebugColor, false, -1, 0, 5);
 }
 
 void AEnemyCharacter::FollowWaypoints()

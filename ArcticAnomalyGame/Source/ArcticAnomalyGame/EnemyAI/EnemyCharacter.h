@@ -25,17 +25,27 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	static bool IsPlayerInChaseRange();
+	void TryOpenDoor() const;
 	void FollowWaypoints();
-
+	
 	UPROPERTY(EditAnywhere, Category = "Management")
 	bool bIsAwake = false;
-
+	
 	UPROPERTY(EditAnywhere, Category = "Management")
 	bool bRespawnAfterPatrol = true;
-
+	
+	UPROPERTY(EditAnywhere, Category = "Detection")
+	int DetectionHeightOffset = 100;
+	
+	UPROPERTY(EditAnywhere, Category = "Door Handling")
+	int DoorDetectionDistance = 100;
+	
+	UPROPERTY(EditAnywhere, Category = "Door Handling")
+	int DoorHandlingSideSize = 100;
+	
 	UPROPERTY(EditAnywhere, Category = "Management")
 	AWaypointManager* WaypointManager;
-
+	
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* TemporaryCapsuleMesh;
 	

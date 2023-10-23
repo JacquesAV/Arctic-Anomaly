@@ -15,6 +15,13 @@ AWaypointNode::AWaypointNode()
 	
 	// Set the root component as the RootComponent of the actor.
 	RootComponent = Root;
+	
+	// Create a box component that does not collide or affect navmesh, this helps for editor selection.
+	EditorBoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("EditorBoxCollider"));
+	EditorBoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EditorBoxCollider->SetCanEverAffectNavigation(false);
+	EditorBoxCollider->SetupAttachment(RootComponent);
+	EditorBoxCollider->SetBoxExtent(FVector(DebugRadius, DebugRadius, DebugHeight), false);
 }
 
 // Called when the game starts or when spawned.
@@ -33,14 +40,14 @@ void AWaypointNode::Tick(float DeltaTime)
 #if WITH_EDITOR
 void AWaypointNode::DebugVisuals() const
 {
-	if (!GWorld->HasBegunPlay())
+	if (!GWorld->IsGameWorld() || (GWorld->IsGameWorld() && bDebugInPlay))
 	{
-		FColor Color = IsSpawnPoint ? Color = FColor::Green : FColor::Turquoise;
+		FColor Color = IsSpawnPoint ? Color = FColor::Green : FColor::Cyan;
 		
 		// Draw a debug box around the waypoint node.
 		DrawDebugCylinder(
-			GetWorld(), GetActorLocation(), GetActorLocation() + FVector(0, 0, 100),
-			50, 12, Color, false, -1, 0, 2);
+			GetWorld(), GetActorLocation(), GetActorLocation() + FVector(0, 0, DebugRadius),
+			DebugRadius, 12, Color, false, -1, 0, DebugThickness);
 		
 		// Draw a debug line between connected waypoints, accounting for null.
 		for (int32 i = 0; i < ConnectedWaypoints.Num(); i++)
@@ -49,7 +56,7 @@ void AWaypointNode::DebugVisuals() const
 			{
 				DrawDebugLine(
 					GetWorld(), GetActorLocation(), ConnectedWaypoints[i]->GetActorLocation(),
-					FColor::Emerald, false, -1, 0, 4);
+					FColor::Cyan, false, -1, 0, DebugThickness);
 			}
 		}
 	}
