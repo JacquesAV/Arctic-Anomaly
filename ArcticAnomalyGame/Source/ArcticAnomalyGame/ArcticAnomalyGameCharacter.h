@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interactables/BaseDoor.h"
-#include "InventorySystem/Items/ItemRevised.h"
 #include "InventorySystem/ItemPickup.h"
 #include "InventorySystem/Items/FItemBoolPair.h"
 #include "InventorySystem/Items/InventoryComponent.h"
@@ -110,12 +109,8 @@ public:
 	UCustomDataManager* DataManager;
 
 	//array of required items
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Items")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
 	TArray<UItem*> RequiredItems;
-
-	//array of required items revised
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Items")
-	TArray<UItemRevised*> RequiredItemsRevised;
 	
 	/*inspectable actions*/
 	UPROPERTY(EditAnywhere)

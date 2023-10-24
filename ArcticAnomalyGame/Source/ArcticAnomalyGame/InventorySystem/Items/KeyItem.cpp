@@ -7,6 +7,5 @@ void UKeyItem::Use(AArcticAnomalyGameCharacter* Character)
 	if (Character)
 	{
 		//Add item to their inventory
-		
 	}
 }
