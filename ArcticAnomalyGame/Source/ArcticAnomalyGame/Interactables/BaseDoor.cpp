@@ -71,38 +71,16 @@ void ABaseDoor::ToggleDoor(FVector ForwardVector)
 {
 	if (isClosed)
 	{
-		ForceOpenDoor(ForwardVector);
+		isClosed = false;
+		Closing = false;
+		Opening = true;
 	}
 	else
 	{
-		ForceCloseDoor(ForwardVector);
+		Opening = false;
+		Closing = true;
+		isClosed = true;
 	}
-}
-
-void ABaseDoor::SetDoorState(const bool bOpen, FVector ForwardVector)
-{
-	if (bOpen)
-	{
-		ForceOpenDoor(ForwardVector);
-	}
-	else
-	{
-		ForceCloseDoor(ForwardVector);
-	}
-}
-
-void ABaseDoor::ForceOpenDoor(FVector ForwardVector)
-{
-	isClosed = false;
-	Closing = false;
-	Opening = true;
-}
-
-void ABaseDoor::ForceCloseDoor(FVector ForwardVector)
-{
-	Opening = false;
-	Closing = true;
-	isClosed = true;
 }
 
 void ABaseDoor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
