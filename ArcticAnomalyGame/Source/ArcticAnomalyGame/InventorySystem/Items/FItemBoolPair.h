@@ -2,28 +2,21 @@
 #include "Item.h"
 #include "FItemBoolPair.generated.h"
 
-USTRUCT(BlueprintType)
-struct FItemBoolPair
+UCLASS()
+class UItemBoolPair : public UObject
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
+
+public:
+	UItemBoolPair():Key(nullptr),Value(false){}
+
+	UItemBoolPair(UItem* InKey, bool InValue):Key(InKey),Value(InValue){}
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Item")
 	UItem* Key;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Item")
 	bool Value;
-
-	FItemBoolPair()
-	{
-		Key=nullptr;
-		Value=false;
-	}
-
-	FItemBoolPair(UItem* InKey, bool InValue)
-	{
-		Key=InKey;
-		Value=InValue;
-	}
 };
 
 UCLASS()
@@ -32,6 +25,9 @@ class ARCTICANOMALYGAME_API UCustomDataManager : public UObject
 	GENERATED_BODY()
 
 public:
+    UFUNCTION(Category = "Custom Data Manager")
+	void InitializeValues();
+	
 	UFUNCTION(BlueprintCallable,Category = "Custom Data Manager")
 	bool GetValueForKey(UItem* Key, bool& Value);
 
@@ -39,13 +35,13 @@ public:
 	bool SetValueForKey(UItem* Key, bool Value);
 
 	UFUNCTION(BlueprintCallable,Category = "Custom Data Manager")
-	void AddKeyValuePair(FItemBoolPair NewPair);
+	void AddKeyValuePair(UItemBoolPair* NewPair);
 
 	UFUNCTION(BlueprintCallable,Category = "Custom Data Manager")
 	void AllValuesTrue(bool& AllTrue);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Custom Data Manager")
-	TArray<FItemBoolPair> KeyValuePairs;
+	TArray<UItemBoolPair*> KeyValuePairs;
 	
 };
