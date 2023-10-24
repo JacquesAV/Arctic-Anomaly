@@ -124,15 +124,19 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 	End = ((ForwardVector * 200.0f) + Start);
 
+	FCollisionQueryParams TraceParams(FName(TEXT("LOS_Trace")), true, this);
+
 	//If the player is not inspecting an object, check for one in front of the player
 	if (!InspectingObject)
 	{
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams,
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams,
 		                                         DefaultResponseParams))
 		{
+			//log the name of the object that the player is looking at
 			if (Hit.GetActor()->GetClass()->IsChildOf(AInspectableObject::StaticClass()))
 			{
-				CurrentInspectable = Cast<AInspectableObject>(Hit.GetActor());
+				//log the name of the object that the player is looking at
+				UE_LOG(LogTemp, Warning, TEXT("Set: %s"), *Hit.GetActor()->GetName());
 			}
 		}
 		else
