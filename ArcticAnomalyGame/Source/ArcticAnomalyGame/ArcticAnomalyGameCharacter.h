@@ -109,9 +109,9 @@ public:
 	UCustomDataManager* DataManager;
 
 	//array of required items
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Items")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
 	TArray<UItem*> RequiredItems;
-
+	
 	/*inspectable actions*/
 	UPROPERTY(EditAnywhere)
 	class AInspectableObject* CurrentInspectable;

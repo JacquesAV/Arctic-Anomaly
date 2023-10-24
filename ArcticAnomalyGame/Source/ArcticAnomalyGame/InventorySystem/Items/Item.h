@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
+#include "Engine/DataAsset.h"
 #include "Item.generated.h"
 
-UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced)
-class ARCTICANOMALYGAME_API UItem : public UObject
+UCLASS(Abstract, BlueprintType)
+class ARCTICANOMALYGAME_API UItem : public UDataAsset
 {
 	GENERATED_BODY()
 
@@ -32,8 +32,7 @@ public:
 	UTexture2D* Thumbnail;
 
 	/**The display name for this item in the inventory*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Item")
-	;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Item");
 	FText ItemDisplayName;
 
 	/**The inventory this item is in*/
