@@ -23,6 +23,7 @@ AEnemyCharacter::AEnemyCharacter()
 		MyCapsuleComponent->SetCapsuleSize(34.f, 88.f);
 		MyCapsuleComponent->ShapeColor = FColor::Green;
 		MyCapsuleComponent->SetCollisionProfileName("CharacterMesh");
+		MyCapsuleComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 		RootComponent = MyCapsuleComponent;
 		
 		EnemyMeshComponent->SetupAttachment(RootComponent);
@@ -88,7 +89,7 @@ void AEnemyCharacter::RespawnLogic()
 	WaypointManager->UpdateOriginWaypoint(RandomSpawnPoint);
 	WaypointManager->UpdateTargetWaypoint(RandomSpawnPoint);
 
-	// Teleport to the new spawn point.
+	// Teleport to the new spawn point. //TODO: No error checking yet :(
 	SetActorLocation(RandomSpawnPoint->GetActorLocation());
 	bIsAwake = true;
 }
