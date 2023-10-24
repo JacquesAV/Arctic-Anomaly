@@ -72,4 +72,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Debugging")
 	float DebugThickness = 5;
+
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	bool bDebugSweeper = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	bool bDebugLOS = false;
 };
