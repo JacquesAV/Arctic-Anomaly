@@ -24,7 +24,7 @@ public:
 	// Called every frame.
 	virtual void Tick(float DeltaTime) override;
 	void DebugVisuals() const;
-	virtual bool ShouldTickIfViewportsOnly() const override;
+	//virtual bool ShouldTickIfViewportsOnly() const override;
 
 	// Gives a transform to the waypoint node.
 	UPROPERTY()

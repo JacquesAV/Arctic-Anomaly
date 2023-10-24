@@ -85,8 +85,6 @@ void ABaseDoor::ToggleDoor(FVector ForwardVector)
 
 void ABaseDoor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
 	// Check if the property that was changed is the static mesh component
 	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(ABaseDoor, DoorMesh))
 	{
