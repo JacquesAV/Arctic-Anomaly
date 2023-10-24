@@ -1,10 +1,12 @@
 // Copyright (c) 2023, Stinky Cheese, All rights reserved.
 
 #include "EnemyCharacter.h"
-
+#include "NavigationPath.h"
 #include "ArcticAnomalyGame/Interactables/BaseDoor.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values.
@@ -57,10 +59,18 @@ void AEnemyCharacter::BeginPlay()
 		RespawnLogic();
 	}
 	
-	// Update the player character reference if it is null.
-	if (!PlayerCharacter)
+	// Update the current target reference if it is null, default to the primary player character.
+	if (!CurrentTarget)
 	{
-		PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		CurrentTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		if (CurrentTarget)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player character was fetched successfully!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player character could not be fetched!"));
+		}
 	}
 }
 
@@ -92,13 +102,28 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	
 	TryOpenDoor();
 	
-	// Check if the player is within the chase range
-	if (IsPlayerInChaseRange())
+	if (CurrentTarget && HasLineOfSight(CurrentTarget))
 	{
-		//TODO: Implement chase logic.
+		bIsCurrentlyChasing = true;
+		ChaseTimeoutTimer = OutOfSightChaseTime;
 	}
 	else
 	{
+		ChaseTimeoutTimer -= DeltaTime;
+		if (ChaseTimeoutTimer <= 0)
+		{
+			bIsCurrentlyChasing = false;
+		}
+	}
+	
+	if (bIsCurrentlyChasing)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+		ChaseTarget(CurrentTarget);
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = PatrolSpeed;
 		FollowWaypoints();
 	}
 }
@@ -109,10 +134,63 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-//TODO: Implement this function.
-bool AEnemyCharacter::IsPlayerInChaseRange()
+void AEnemyCharacter::ChaseTarget(const AActor* Target) const
 {
-	return false;
+	if(!Target)
+	{
+		return;
+	}
+	
+	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), Target);
+	
+	// Debug draw the path being followed.
+	if (GEngine)
+	{
+		const UNavigationPath* NavPath = UAIBlueprintHelperLibrary::GetCurrentPath(GetController());
+		TArray<FVector> Path = NavPath->PathPoints;
+		
+		for (int32 i = 0; i < Path.Num() - 1; ++i)
+		{
+			DrawDebugLine(GetWorld(), Path[i], Path[i + 1], FColor::Cyan, false, -1, 0, DebugThickness);
+		}
+	}
+}
+
+bool AEnemyCharacter::HasLineOfSight(AActor* Target)
+{
+	if(!Target)
+	{
+		return false;
+	}
+	
+	bool bTargetInLOS = false;
+	FColor DebugColor = FColor::Yellow;
+	FVector StartLocation = GetActorLocation() + FVector(0, 0, DetectionHeightOffset);
+	FVector EndLocation = Target->GetActorLocation() + FVector(0, 0, DetectionHeightOffset/2);
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams(FName(TEXT("LOS_Trace")), true, this);
+	
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, TraceParams))
+	{
+		// Debug log the name of the hit result.
+		//UE_LOG(LogTemp, Warning, TEXT("Hit result: %s"), *HitResult.GetActor()->GetName());
+		
+		// Check if the hit actor is the target or if the hit component is part of the target.
+		if (HitResult.GetActor() == Target || HitResult.Component->GetOwner() == Target)
+		{
+			DebugColor = FColor::Green;
+			bTargetInLOS = true;
+		}
+	}
+	
+	// Debug the enemy's line of sight.
+	if (GEngine)
+	{
+		DrawDebugLine(GetWorld(), StartLocation, EndLocation, DebugColor, false, -1, 0, DebugThickness);
+	}
+	
+	// Return true if the player is in LOS, false otherwise.
+	return bTargetInLOS;
 }
 
 // TODO: Replace the sweep check with something simpler or something with less overhead.
@@ -148,10 +226,10 @@ void AEnemyCharacter::TryOpenDoor() const
 				AActor* HitActor = HitResult.GetActor();
 				if (ABaseDoor* Door = Cast<ABaseDoor>(HitActor))
 				{
+					DebugColor = FColor::Orange;
 					if (Door->isClosed)
 					{
 						Door->ForceOpenDoor(GetActorForwardVector());
-						DebugColor = FColor::Orange;
 						UE_LOG(LogTemp, Warning, TEXT("Enemy is opening door: %s"), *HitActor->GetName());
 					}
 				}

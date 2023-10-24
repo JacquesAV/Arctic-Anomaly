@@ -24,7 +24,8 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	static bool IsPlayerInChaseRange();
+	void ChaseTarget(const AActor* Target) const;
+	bool HasLineOfSight(AActor* Target);
 	void TryOpenDoor() const;
 	void FollowWaypoints();
 	
@@ -33,6 +34,24 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Management")
 	bool bRespawnAfterPatrol = true;
+
+	UPROPERTY(VisibleAnywhere, Category = "Management")
+	bool bIsCurrentlyChasing = false;
+
+	UPROPERTY(EditAnywhere, Category = "Management")
+	float ChaseTimeoutTimer = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Management")
+	ACharacter *CurrentTarget;
+
+	UPROPERTY(EditAnywhere, Category = "Statistics")
+	int PatrolSpeed = 200;
+
+	UPROPERTY(EditAnywhere, Category = "Statistics")
+	int ChaseSpeed = 625;
+
+	UPROPERTY(EditAnywhere, Category = "Detection")
+	float OutOfSightChaseTime = 2;
 	
 	UPROPERTY(EditAnywhere, Category = "Detection")
 	int DetectionHeightOffset = 100;
@@ -49,6 +68,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* TemporaryCapsuleMesh;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	ACharacter *PlayerCharacter;
+	UPROPERTY(EditAnywhere, Category = "Debugging")
+	float DebugThickness = 5;
 };
