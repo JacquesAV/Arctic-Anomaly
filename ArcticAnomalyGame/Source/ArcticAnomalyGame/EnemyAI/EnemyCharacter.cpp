@@ -12,7 +12,7 @@
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// Access the capsule & mesh component.
 	UCapsuleComponent* MyCapsuleComponent = GetCapsuleComponent();
 	USkeletalMeshComponent* EnemyMeshComponent = GetMesh();
@@ -25,7 +25,7 @@ AEnemyCharacter::AEnemyCharacter()
 		MyCapsuleComponent->SetCollisionProfileName("CharacterMesh");
 
 		RootComponent = MyCapsuleComponent;
-		
+
 		EnemyMeshComponent->SetupAttachment(RootComponent);
 		EnemyMeshComponent->SetCanEverAffectNavigation(false);
 		EnemyMeshComponent->SetRelativeScale3D(FVector(0.2f, 0.2f, 0.2f));
@@ -33,13 +33,13 @@ AEnemyCharacter::AEnemyCharacter()
 
 		EnemyMeshComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	}
-	
+
 	// Create a capsule component and attach it to the root.
 	TemporaryCapsuleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TemporaryCapsuleMesh"));
 	TemporaryCapsuleMesh->SetCollisionProfileName("Trigger");
 	TemporaryCapsuleMesh->SetupAttachment(RootComponent);
 	TemporaryCapsuleMesh->SetCanEverAffectNavigation(false);
-	
+
 	// Disable gravity so the object doesnt fall out of the map.
 	TemporaryCapsuleMesh->SetEnableGravity(false);
 }
@@ -48,21 +48,22 @@ AEnemyCharacter::AEnemyCharacter()
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// Update the waypoint manager reference if it is null.
 	if (!WaypointManager)
 	{
-		WaypointManager = Cast<AWaypointManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AWaypointManager::StaticClass()));
+		WaypointManager = Cast<AWaypointManager>(
+			UGameplayStatics::GetActorOfClass(GetWorld(), AWaypointManager::StaticClass()));
 		UE_LOG(LogTemp, Warning, TEXT("Waypoint manager had to be fetched, this should be set!"));
 	}
-	
+
 	// Update the spawn points in the waypoint manager, reset the visits and move to the first waypoint.
 	if (WaypointManager)
 	{
 		WaypointManager->UpdateSpawnPoints();
 		RespawnLogic();
 	}
-	
+
 	// Update the current target reference if it is null, default to the primary player character.
 	if (!CurrentTarget)
 	{
@@ -98,16 +99,16 @@ void AEnemyCharacter::RespawnLogic()
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	if(!bIsAwake)
+
+	if (!bIsAwake)
 	{
 		// Stop the actor in place and return.
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetController(), GetActorLocation());
 		return;
 	}
-	
+
 	ForwardHitSweepCheck();
-	
+
 	if (CurrentTarget && HasLineOfSight(CurrentTarget))
 	{
 		bIsCurrentlyChasing = true;
@@ -121,7 +122,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			bIsCurrentlyChasing = false;
 		}
 	}
-	
+
 	if (bIsCurrentlyChasing)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
@@ -142,24 +143,24 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AEnemyCharacter::ChaseTarget(const AActor* Target) const
 {
-	if(!Target)
+	if (!Target)
 	{
 		return;
 	}
-	
+
 	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), Target);
-	
+
 	// Debug draw the path being followed.
-	if (GEngine)
+	if (GEngine && bDebugLOS)
 	{
 		const UNavigationPath* NavPath = UAIBlueprintHelperLibrary::GetCurrentPath(GetController());
 
 		//make sure path is valid
 		if (!NavPath)
 			return;
-		
+
 		TArray<FVector> Path = NavPath->PathPoints;
-		
+
 		for (int32 i = 0; i < Path.Num() - 1; ++i)
 		{
 			DrawDebugLine(GetWorld(), Path[i], Path[i + 1], FColor::Cyan, false, -1, 0, DebugThickness);
@@ -169,23 +170,23 @@ void AEnemyCharacter::ChaseTarget(const AActor* Target) const
 
 bool AEnemyCharacter::HasLineOfSight(AActor* Target) const
 {
-	if(!Target)
+	if (!Target)
 	{
 		return false;
 	}
-	
+
 	bool bTargetInLOS = false;
 	FColor DebugColor = FColor::Yellow;
 	FVector StartLocation = GetActorLocation() + FVector(0, 0, DetectionHeightOffset);
-	FVector EndLocation = Target->GetActorLocation() + FVector(0, 0, DetectionHeightOffset/2);
+	FVector EndLocation = Target->GetActorLocation() + FVector(0, 0, DetectionHeightOffset / 2);
 	FHitResult HitResult;
 	FCollisionQueryParams TraceParams(FName(TEXT("LOS_Trace")), true, this);
-	
+
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, TraceParams))
 	{
 		// Debug log the name of the hit result.
 		//UE_LOG(LogTemp, Warning, TEXT("Hit result: %s"), *HitResult.GetActor()->GetName());
-		
+
 		// Check if the hit actor is the target or if the hit component is part of the target.
 		if (HitResult.GetActor() == Target || HitResult.Component->GetOwner() == Target)
 		{
@@ -193,13 +194,13 @@ bool AEnemyCharacter::HasLineOfSight(AActor* Target) const
 			bTargetInLOS = true;
 		}
 	}
-	
+
 	// Debug the enemy's line of sight.
 	if (GEngine && bDebugLOS)
 	{
 		DrawDebugLine(GetWorld(), StartLocation, EndLocation, DebugColor, false, -1, 0, DebugThickness);
 	}
-	
+
 	// Return true if the player is in LOS, false otherwise.
 	return bTargetInLOS;
 }
@@ -210,15 +211,16 @@ void AEnemyCharacter::ForwardHitSweepCheck()
 	// Create a box-shaped collision sweep to check for the player and doors.
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	
+
 	const FVector Start = GetActorLocation() + FVector(0, 0, DetectionHeightOffset);
 	const FVector End = Start + GetActorForwardVector() * DoorDetectionDistance;
-	const float HalfSideSize = DoorHandlingSideSize/2;
+	const float HalfSideSize = DoorHandlingSideSize / 2;
 	const FVector HalfExtents = FVector(DoorDetectionDistance, HalfSideSize, HalfSideSize);
 	TArray<FHitResult> HitResults;
 	FColor DebugColor = FColor::Cyan;
-	
-	if (GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, ECC_WorldDynamic, FCollisionShape::MakeBox(HalfExtents), QueryParams))
+
+	if (GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, ECC_WorldDynamic,
+	                                       FCollisionShape::MakeBox(HalfExtents), QueryParams))
 	{
 		for (const FHitResult& HitResult : HitResults)
 		{
@@ -228,7 +230,7 @@ void AEnemyCharacter::ForwardHitSweepCheck()
 			}
 		}
 	}
-	
+
 	// Draw a debug box to visualize the box cast.
 	if (GEngine && bDebugSweeper)
 	{
@@ -262,7 +264,7 @@ bool AEnemyCharacter::HitResultDoorCheck(const FHitResult* HitResult) const
 		{
 			return false;
 		}
-		
+
 		// Handle the door logic.
 		AActor* HitActor = HitResult->GetActor();
 		if (ABaseDoor* Door = Cast<ABaseDoor>(HitActor))
@@ -287,9 +289,10 @@ void AEnemyCharacter::FollowWaypoints()
 		if (GetActorLocation().Equals(WaypointManager->TargetWaypoint->GetActorLocation(), 100))
 		{
 			// If the origin waypoint was reached (again), respawn instead.
-			if (WaypointManager->TargetWaypoint == WaypointManager->OriginWaypoint && WaypointManager->RecentlyVisitedNodes.Num() > 0)
+			if (WaypointManager->TargetWaypoint == WaypointManager->OriginWaypoint && WaypointManager->
+				RecentlyVisitedNodes.Num() > 0)
 			{
-				if(bRespawnAfterPatrol)
+				if (bRespawnAfterPatrol)
 				{
 					// TODO: If the player is within LOS, continue patrolling until the player is out of LOS.
 					RespawnLogic();
@@ -310,7 +313,7 @@ void AEnemyCharacter::FollowWaypoints()
 				WaypointManager->UpdateTargetWaypoint(NextWaypoint);
 			}
 		}
-		
+
 		// Move to the target waypoint using navmesh pathfinding if it is valid.
 		if (WaypointManager->TargetWaypoint)
 		{
