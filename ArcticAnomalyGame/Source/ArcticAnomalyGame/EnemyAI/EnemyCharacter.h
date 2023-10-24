@@ -25,8 +25,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void ChaseTarget(const AActor* Target) const;
-	bool HasLineOfSight(AActor* Target);
-	void TryOpenDoor() const;
+	bool HasLineOfSight(AActor* Target) const;
+	void ForwardHitSweepCheck();
+	bool HitResultPlayerCheck(const FHitResult* HitResult);
+	bool HitResultDoorCheck(const FHitResult* HitResult) const;
 	void FollowWaypoints();
 	
 	UPROPERTY(EditAnywhere, Category = "Management")
