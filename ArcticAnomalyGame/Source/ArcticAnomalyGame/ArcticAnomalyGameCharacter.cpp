@@ -98,9 +98,11 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	for (int i = 0; i < RequiredItems.Num(); i++)
 	{
 		bool Value;
-		DataManager->GetValueForKey(RequiredItems[i], Value);
-		UE_LOG(LogTemp, Warning, TEXT("Key: %s Value: %s"), *RequiredItems[i]->ItemDisplayName.ToString(),
-		       Value ? TEXT("True") : TEXT("False"));
+		if(DataManager->GetValueForKey(RequiredItems[i], Value))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Key: %s Value: %s"), *RequiredItems[i]->ItemDisplayName.ToString(),
+				   Value ? TEXT("True") : TEXT("False"));
+		}
 	}
 
 	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
@@ -263,6 +265,11 @@ void AArcticAnomalyGameCharacter::ItemInteraction()
 		{
 			//find the item in the data manager and set the value to true
 			DataManager->SetValueForKey(CurrentItemPickup->Item, true);
+
+			//log if all items are true
+			bool AllTrue;
+			DataManager->AllValuesTrue(AllTrue);
+			UE_LOG(LogTemp, Warning, TEXT("AllTrue: %s"), AllTrue ? TEXT("True") : TEXT("False"));
 
 			//TODO: If all items are true then the player has won, they just need to exit the building at to the watchtower.
 		}
