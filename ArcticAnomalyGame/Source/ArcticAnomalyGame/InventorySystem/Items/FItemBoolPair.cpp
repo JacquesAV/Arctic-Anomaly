@@ -17,8 +17,9 @@ bool UCustomDataManager::GetValueForKey(UItem* Key, bool& OutValue)
 bool UCustomDataManager::SetValueForKey(UItem* Key, bool NewValue)
 {
 	for (FItemBoolPair& Pair : KeyValuePairs)
-	{
-		if (Pair.Key->ItemDisplayName.EqualTo(Key->ItemDisplayName))
+	{		
+		//check if pair is not empty
+		if (Pair.Key != nullptr &&Pair.Key->ItemDisplayName.EqualTo(Key->ItemDisplayName))
 		{
 			Pair.Value = NewValue;
 			return true; // Key found, set the new value.

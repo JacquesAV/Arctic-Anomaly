@@ -140,6 +140,8 @@ public:
 	FComponentQueryParams DefaultComponentQueryParams;
 	FCollisionResponseParams DefaultResponseParams;
 
+	bool HasAllRequiredItems;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
