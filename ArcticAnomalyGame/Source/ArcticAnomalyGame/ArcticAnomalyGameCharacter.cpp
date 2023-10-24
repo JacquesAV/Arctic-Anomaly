@@ -248,6 +248,20 @@ void AArcticAnomalyGameCharacter::Interact()
 	InspectObjectInteraction();
 }
 
+bool AArcticAnomalyGameCharacter::HasFoundItem(UItem* Item)
+{
+	for (int i = 0; i < RequiredItems.Num(); i++)
+	{
+		bool Value;
+		if(DataManager->GetValueForKey(RequiredItems[i], Value))
+		{
+			if(RequiredItems[i] == Item)
+				return Value;
+		}
+	}
+	return false;
+}
+
 void AArcticAnomalyGameCharacter::DoorInteraction()
 {
 	if (CurrentDoor != nullptr)
