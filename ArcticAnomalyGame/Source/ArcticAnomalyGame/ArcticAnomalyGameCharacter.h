@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Interactables/BaseDoor.h"
 #include "InventorySystem/ItemPickup.h"
+#include "InventorySystem/Items/FItemBoolPair.h"
 #include "InventorySystem/Items/InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include "ArcticAnomalyGameCharacter.generated.h"
@@ -104,6 +105,13 @@ public:
 
 	AItemPickup* CurrentItemPickup;
 
+	//array of FItemBoolPair
+	UCustomDataManager* DataManager;
+
+	//array of required items
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
+	TArray<UItem*> RequiredItems;
+	
 	/*inspectable actions*/
 	UPROPERTY(EditAnywhere)
 	class AInspectableObject* CurrentInspectable;
@@ -132,6 +140,8 @@ public:
 	FComponentQueryParams DefaultComponentQueryParams;
 	FCollisionResponseParams DefaultResponseParams;
 
+	bool HasAllRequiredItems;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -141,6 +151,9 @@ protected:
 
 	/** Called for interaction input */
 	void Interact();
+
+	UFUNCTION(BlueprintCallable, Category="Items")
+	bool HasFoundItem(UItem* Item);
 
 	void DoorInteraction();
 

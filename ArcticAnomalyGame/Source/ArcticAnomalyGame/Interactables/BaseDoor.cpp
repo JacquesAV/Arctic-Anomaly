@@ -24,11 +24,17 @@ ABaseDoor::ABaseDoor()
 	ColliderComponent->SetupAttachment(DoorMesh);
 
 	//Set the collider to prevent physics objects from moving through the door.
-	ColliderComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	ColliderComponent->SetCollisionProfileName("DoorDetection");
 
 	isClosed = true;
 	Opening = false;
 	Closing = false;
+
+	// Define NavMesh friendly settings.
+	BoxComp->SetCanEverAffectNavigation(false);
+	DoorMesh->SetCanEverAffectNavigation(false);
+	ColliderComponent->SetCanEverAffectNavigation(true);
+	ColliderComponent->bDynamicObstacle = true;
 }
 
 // Called when the game starts or when spawned

@@ -26,7 +26,8 @@ bool UInventoryComponent::AddItem(UItem* Item)
 	Item->OwningInventory = this;
 	Item->World = GetWorld();
 	Items.Add(Item);
-	UE_LOG(LogTemp, Warning, TEXT("New item added to inventory"));
+	//Log the item added
+	UE_LOG(LogTemp, Warning, TEXT("Item added to inventory: %s"), *Item->ItemDisplayName.ToString());
 
 	//Update UI
 	OnInventoryUpdated.Broadcast();

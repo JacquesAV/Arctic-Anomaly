@@ -10,11 +10,13 @@ AItemPickup::AItemPickup()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	RootComponent=CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
 	//Create the box collider
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
 	BoxCollider->SetGenerateOverlapEvents(true);
 	BoxCollider->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
-	BoxCollider->AttachToComponent(this->RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	BoxCollider->SetupAttachment(RootComponent);
 	BoxCollider->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMesh"));

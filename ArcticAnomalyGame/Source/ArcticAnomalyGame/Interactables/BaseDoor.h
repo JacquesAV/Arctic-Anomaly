@@ -32,7 +32,7 @@ public:
 
 	UFUNCTION()
 	virtual void ToggleDoor(FVector ForwardVector);
-
+	
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DoorMesh;
 
