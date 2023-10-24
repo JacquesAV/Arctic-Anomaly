@@ -195,7 +195,7 @@ bool AEnemyCharacter::HasLineOfSight(AActor* Target) const
 	}
 	
 	// Debug the enemy's line of sight.
-	if (GEngine)
+	if (GEngine && bDebugLOS)
 	{
 		DrawDebugLine(GetWorld(), StartLocation, EndLocation, DebugColor, false, -1, 0, DebugThickness);
 	}
@@ -230,10 +230,13 @@ void AEnemyCharacter::ForwardHitSweepCheck()
 	}
 	
 	// Draw a debug box to visualize the box cast.
-	FVector Center = Start + (GetActorForwardVector() * DoorDetectionDistance * 0.5f);
-	FVector Extent = FVector(DoorDetectionDistance * 0.5f, HalfSideSize, HalfSideSize);
-	FQuat Rotation = FQuat(GetActorForwardVector().Rotation());
-	DrawDebugBox(GetWorld(), Center, Extent, Rotation, DebugColor, false, -1, 0, 5);
+	if (GEngine && bDebugSweeper)
+	{
+		FVector Center = Start + (GetActorForwardVector() * DoorDetectionDistance * 0.5f);
+		FVector Extent = FVector(DoorDetectionDistance * 0.5f, HalfSideSize, HalfSideSize);
+		FQuat Rotation = FQuat(GetActorForwardVector().Rotation());
+		DrawDebugBox(GetWorld(), Center, Extent, Rotation, DebugColor, false, -1, 0, 5);
+	}
 }
 
 bool AEnemyCharacter::HitResultPlayerCheck(const FHitResult* HitResult)
