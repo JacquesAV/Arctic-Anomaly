@@ -32,15 +32,6 @@ public:
 
 	UFUNCTION()
 	virtual void ToggleDoor(FVector ForwardVector);
-
-	UFUNCTION()
-	virtual void SetDoorState(bool bOpen, FVector ForwardVector);
-
-	UFUNCTION()
-	virtual void ForceOpenDoor(FVector ForwardVector);
-
-	UFUNCTION()
-	virtual void ForceCloseDoor(FVector ForwardVector);
 	
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DoorMesh;
