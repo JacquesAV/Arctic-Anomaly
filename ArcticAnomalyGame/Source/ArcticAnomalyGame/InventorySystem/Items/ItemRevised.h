@@ -1,19 +1,19 @@
-﻿// Copyright (c) 2023, Stinky Cheese, All rights reserved.
+// Copyright (c) 2023, Stinky Cheese, All rights reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
-#include "Item.generated.h"
+#include "Engine/DataAsset.h"
+#include "ItemRevised.generated.h"
 
-UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced)
-class ARCTICANOMALYGAME_API UItem : public UObject
+UCLASS(BlueprintType)
+class ARCTICANOMALYGAME_API UItemRevised : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UItem();
-
+	UItemRevised();
+	
 	virtual UWorld* GetWorld() const { return World; }
 
 	UPROPERTY(Transient)
@@ -33,7 +33,7 @@ public:
 
 	/**The display name for this item in the inventory*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Item");
-	FText ItemDisplayName;
+	FText ItemDisplayName = FText::FromString("Item");
 
 	/**The inventory this item is in*/
 	UPROPERTY()
