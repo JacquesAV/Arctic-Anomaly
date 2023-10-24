@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "WinZone.h"
 #include "Engine/LocalPlayer.h"
 #include "InventorySystem/Items/Item.h"
 #include "Engine/TriggerCapsule.h"
@@ -83,7 +84,7 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 		FItemBoolPair NewPair(RequiredItems[i], false);
 		DataManager->AddKeyValuePair(NewPair);
 	}
-	
+
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -98,9 +99,16 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	for (int i = 0; i < RequiredItems.Num(); i++)
 	{
 		bool Value;
-		DataManager->GetValueForKey(RequiredItems[i], Value);
-		UE_LOG(LogTemp, Warning, TEXT("Key: %s Value: %s"), *RequiredItems[i]->ItemDisplayName.ToString(),
-		       Value ? TEXT("True") : TEXT("False"));
+		if (RequiredItems[i] && !RequiredItems[i]->ItemDisplayName.IsEmpty() && DataManager->GetValueForKey(
+			RequiredItems[i], Value))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Key: %s Value: %s"), *RequiredItems[i]->ItemDisplayName.ToString(),
+			       Value ? TEXT("True") : TEXT("False"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Required items failed to initialize properly"))
+		}
 	}
 
 	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
@@ -119,7 +127,7 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 	if (!InspectingObject)
 	{
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams,
-												 DefaultResponseParams))
+		                                         DefaultResponseParams))
 		{
 			if (Hit.GetActor()->GetClass()->IsChildOf(AInspectableObject::StaticClass()))
 			{
@@ -133,7 +141,7 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 	}
 
 	//If the player is trying to rotate the object whilst they are inspecting
-	if(InspectingObject && Rotating)
+	if (InspectingObject && Rotating)
 	{
 		HoldingComponent->SetRelativeLocation(InspectableObjectOffset);
 		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.90000002f;
@@ -145,7 +153,7 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = PitchMax;
 		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = PitchMin;
 	}
-	
+
 	//If the player is trying to zoom and they are not inspecting
 	if (Zooming)
 	{
@@ -246,6 +254,20 @@ void AArcticAnomalyGameCharacter::Interact()
 	InspectObjectInteraction();
 }
 
+bool AArcticAnomalyGameCharacter::HasFoundItem(UItem* Item)
+{
+	for (int i = 0; i < RequiredItems.Num(); i++)
+	{
+		bool Value;
+		if (DataManager->GetValueForKey(RequiredItems[i], Value))
+		{
+			if (RequiredItems[i] == Item)
+				return Value;
+		}
+	}
+	return false;
+}
+
 void AArcticAnomalyGameCharacter::DoorInteraction()
 {
 	if (CurrentDoor != nullptr)
@@ -259,12 +281,18 @@ void AArcticAnomalyGameCharacter::ItemInteraction()
 {
 	if (CurrentItemPickup != nullptr && CurrentItemPickup->Item)
 	{
-		if(Inventory->AddItem(CurrentItemPickup->Item))
+		if (Inventory->AddItem(CurrentItemPickup->Item))
 		{
 			//find the item in the data manager and set the value to true
 			DataManager->SetValueForKey(CurrentItemPickup->Item, true);
 
+			//log if all items are true
+			bool AllTrue;
+			DataManager->AllValuesTrue(AllTrue);
+			UE_LOG(LogTemp, Warning, TEXT("AllTrue: %s"), AllTrue ? TEXT("True") : TEXT("False"));
+
 			//TODO: If all items are true then the player has won, they just need to exit the building at to the watchtower.
+			HasAllRequiredItems = AllTrue;
 		}
 		CurrentItemPickup->Destroy();
 	}
@@ -284,6 +312,12 @@ void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* Overlapped
 		{
 			AItemPickup* ItemPickup = Cast<AItemPickup>(OtherActor);
 			CurrentItemPickup = ItemPickup;
+		}
+		
+		//if the player has all the required items and the object they are overlapping with is the win zone
+		if (HasAllRequiredItems && OtherActor->GetClass()->IsChildOf(AWinZone::StaticClass()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player has won!"));
 		}
 	}
 }
@@ -313,12 +347,12 @@ void AArcticAnomalyGameCharacter::InspectObjectInteraction()
 
 void AArcticAnomalyGameCharacter::InspectPressed()
 {
-		Zooming = true;
+	Zooming = true;
 }
 
 void AArcticAnomalyGameCharacter::InspectReleased()
 {
-		Zooming = false;
+	Zooming = false;
 }
 
 //Return the player to normal movement
@@ -329,7 +363,7 @@ void AArcticAnomalyGameCharacter::ToggleMovement()
 	FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
 	bUseControllerRotationYaw = !bUseControllerRotationYaw;
 	//log the last rotation
-	if(CanMove)
+	if (CanMove)
 		GetController()->SetControlRotation(LastRotation);
 	else
 		LastRotation = GetControlRotation();
@@ -345,7 +379,7 @@ void AArcticAnomalyGameCharacter::ToggleObjectInspection()
 		CurrentInspectable->Pickup();
 
 		//if the player is not inspecting anything, set to null
-		if(!InspectingObject)
+		if (!InspectingObject)
 			CurrentInspectable = nullptr;
 	}
 }

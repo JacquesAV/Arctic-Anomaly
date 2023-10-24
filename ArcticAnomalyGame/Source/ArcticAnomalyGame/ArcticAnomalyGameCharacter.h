@@ -140,6 +140,8 @@ public:
 	FComponentQueryParams DefaultComponentQueryParams;
 	FCollisionResponseParams DefaultResponseParams;
 
+	bool HasAllRequiredItems;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -149,6 +151,9 @@ protected:
 
 	/** Called for interaction input */
 	void Interact();
+
+	UFUNCTION(BlueprintCallable, Category="Items")
+	bool HasFoundItem(UItem* Item);
 
 	void DoorInteraction();
 
