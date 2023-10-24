@@ -15,18 +15,22 @@ AEnemyCharacter::AEnemyCharacter()
 	
 	// Access the capsule & mesh component.
 	UCapsuleComponent* MyCapsuleComponent = GetCapsuleComponent();
-	USkeletalMeshComponent* MyMeshComponent = GetMesh();
+	USkeletalMeshComponent* EnemyMeshComponent = GetMesh();
 
 	// Set the relevant properties.
-	if (MyCapsuleComponent && MyMeshComponent)
+	if (MyCapsuleComponent && EnemyMeshComponent)
 	{
 		MyCapsuleComponent->SetCapsuleSize(34.f, 88.f);
 		MyCapsuleComponent->ShapeColor = FColor::Green;
 		MyCapsuleComponent->SetCollisionProfileName("CharacterMesh");
 		RootComponent = MyCapsuleComponent;
 		
-		MyMeshComponent->SetupAttachment(RootComponent);
-		MyMeshComponent->SetCanEverAffectNavigation(false);
+		EnemyMeshComponent->SetupAttachment(RootComponent);
+		EnemyMeshComponent->SetCanEverAffectNavigation(false);
+		EnemyMeshComponent->SetRelativeScale3D(FVector(0.2f, 0.2f, 0.2f));
+		EnemyMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -85.0f));
+
+		EnemyMeshComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	}
 	
 	// Create a capsule component and attach it to the root.
