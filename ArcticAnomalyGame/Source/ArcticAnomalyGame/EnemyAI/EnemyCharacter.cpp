@@ -261,7 +261,7 @@ bool AEnemyCharacter::HitResultDoorCheck(const FHitResult* HitResult) const
 		{
 			if (Door->isClosed)
 			{
-				Door->ForceOpenDoor(GetActorForwardVector());
+				Door->ToggleDoor(GetActorForwardVector());
 				UE_LOG(LogTemp, Warning, TEXT("Enemy is opening door: %s"), *HitActor->GetName());
 			}
 			return true;
