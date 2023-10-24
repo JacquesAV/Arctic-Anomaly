@@ -153,6 +153,11 @@ void AEnemyCharacter::ChaseTarget(const AActor* Target) const
 	if (GEngine)
 	{
 		const UNavigationPath* NavPath = UAIBlueprintHelperLibrary::GetCurrentPath(GetController());
+
+		//make sure path is valid
+		if (!NavPath)
+			return;
+		
 		TArray<FVector> Path = NavPath->PathPoints;
 		
 		for (int32 i = 0; i < Path.Num() - 1; ++i)
