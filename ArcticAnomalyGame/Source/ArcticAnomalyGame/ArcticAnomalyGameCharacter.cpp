@@ -15,6 +15,7 @@
 #include "Engine/TriggerCapsule.h"
 #include "Interactables/InspectableObject.h"
 #include "InventorySystem/ItemPickup.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -290,8 +291,7 @@ void AArcticAnomalyGameCharacter::ItemInteraction()
 			bool AllTrue;
 			DataManager->AllValuesTrue(AllTrue);
 			UE_LOG(LogTemp, Warning, TEXT("AllTrue: %s"), AllTrue ? TEXT("True") : TEXT("False"));
-
-			//TODO: If all items are true then the player has won, they just need to exit the building at to the watchtower.
+			
 			HasAllRequiredItems = AllTrue;
 		}
 		CurrentItemPickup->Destroy();
@@ -318,6 +318,8 @@ void AArcticAnomalyGameCharacter::OnOverlapBegin(UPrimitiveComponent* Overlapped
 		if (HasAllRequiredItems && OtherActor->GetClass()->IsChildOf(AWinZone::StaticClass()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Player has won!"));
+			//load the victory level
+			UGameplayStatics::OpenLevel(GetWorld(), "GameWin");
 		}
 	}
 }

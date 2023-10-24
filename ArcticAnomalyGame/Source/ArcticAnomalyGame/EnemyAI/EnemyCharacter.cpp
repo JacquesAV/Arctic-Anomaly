@@ -240,7 +240,7 @@ bool AEnemyCharacter::HitResultPlayerCheck(const FHitResult* HitResult)
 {
 	if (HitResult->GetActor() == CurrentTarget)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Game Over, Target was hit!"));
+		UGameplayStatics::OpenLevel(GetWorld(), "GameOver");
 		bIsAwake = false;
 		return true;
 	}
