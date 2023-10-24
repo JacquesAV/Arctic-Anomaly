@@ -1,12 +1,17 @@
 ﻿#include "FItemBoolPair.h"
 
+void UCustomDataManager::InitializeValues()
+{
+	KeyValuePairs= TArray<UItemBoolPair*>();
+}
+
 bool UCustomDataManager::GetValueForKey(UItem* Key, bool& OutValue)
 {
-	for (const FItemBoolPair& Pair : KeyValuePairs)
+	for (const UItemBoolPair* Pair : KeyValuePairs)
 	{
-		if (Pair.Key == Key)
+		if (Pair->Key == Key)
 		{
-			OutValue = Pair.Value;
+			OutValue = Pair->Value;
 			return true; // Key found, return the value.
 		}
 	}
@@ -16,28 +21,28 @@ bool UCustomDataManager::GetValueForKey(UItem* Key, bool& OutValue)
 
 bool UCustomDataManager::SetValueForKey(UItem* Key, bool NewValue)
 {
-	for (FItemBoolPair& Pair : KeyValuePairs)
+	for (UItemBoolPair* Pair : KeyValuePairs)
 	{		
 		//check if pair is not empty
-		if (Pair.Key != nullptr &&Pair.Key->ItemDisplayName.EqualTo(Key->ItemDisplayName))
+		if (Pair->Key != nullptr &&Pair->Key->ItemDisplayName.EqualTo(Key->ItemDisplayName))
 		{
-			Pair.Value = NewValue;
+			Pair->Value = NewValue;
 			return true; // Key found, set the new value.
 		}
 	}
 	return false; // Key not found.
 }
 
-void UCustomDataManager::AddKeyValuePair(FItemBoolPair NewPair)
+void UCustomDataManager::AddKeyValuePair(UItemBoolPair* NewPair)
 {
 	KeyValuePairs.Add(NewPair);
 }
 
 void UCustomDataManager::AllValuesTrue(bool& AllTrue)
 {
-	for (const FItemBoolPair& Pair : KeyValuePairs)
+	for (const UItemBoolPair* Pair : KeyValuePairs)
 	{
-		if (!Pair.Value)
+		if (!Pair->Value)
 		{
 			AllTrue = false;
 			return;

@@ -60,7 +60,10 @@ AArcticAnomalyGameCharacter::AArcticAnomalyGameCharacter()
 	CurrentDoor = NULL;
 
 	//initialise the data manager
-	DataManager = CreateDefaultSubobject<UCustomDataManager>(TEXT("DataManager"));
+	/*DataManager = CreateDefaultSubobject<UCustomDataManager>(TEXT("DataManager"));
+	DataManager->InitializeValues();*/
+
+	//create requiredItemsFound bool equal to the number of required items
 
 	//Setup Inspection Component
 	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent"));
@@ -79,12 +82,20 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	//iterate through the required items and add them to the DataManagerArray and set the value to false
+	HasAllRequiredItems = false;
 	for (int i = 0; i < RequiredItems.Num(); i++)
 	{
-		FItemBoolPair NewPair(RequiredItems[i], false);
-		DataManager->AddKeyValuePair(NewPair);
+		RequiredItemsFound.Add(false);
 	}
+	
+	//iterate through the required items and add them to the DataManagerArray and set the value to false
+	/*for (int i = 0; i < RequiredItems.Num(); i++)
+	{
+		UItemBoolPair* NewPair = NewObject<UItemBoolPair>(GetTransientPackage(), UItemBoolPair::StaticClass());
+		NewPair->Key = RequiredItems[i];
+		NewPair->Value = false;
+		DataManager->AddKeyValuePair(NewPair);
+	}*/
 
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -97,7 +108,7 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 	}
 
 	//iterate through the required items and log the value of each dataManager keyvalue pair
-	for (int i = 0; i < RequiredItems.Num(); i++)
+	/*for (int i = 0; i < RequiredItems.Num(); i++)
 	{
 		bool Value;
 		if (RequiredItems[i] && !RequiredItems[i]->ItemDisplayName.IsEmpty() && DataManager->GetValueForKey(
@@ -110,7 +121,7 @@ void AArcticAnomalyGameCharacter::BeginPlay()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Required items failed to initialize properly"))
 		}
-	}
+	}*/
 
 	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
 	PitchMin = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin;
@@ -136,7 +147,7 @@ void AArcticAnomalyGameCharacter::Tick(float DeltaTime)
 			if (Hit.GetActor()->GetClass()->IsChildOf(AInspectableObject::StaticClass()))
 			{
 				//log the name of the object that the player is looking at
-				UE_LOG(LogTemp, Warning, TEXT("Set: %s"), *Hit.GetActor()->GetName());
+				CurrentInspectable = Cast<AInspectableObject>(Hit.GetActor());
 			}
 		}
 		else
@@ -263,12 +274,19 @@ bool AArcticAnomalyGameCharacter::HasFoundItem(UItem* Item)
 {
 	for (int i = 0; i < RequiredItems.Num(); i++)
 	{
-		bool Value;
+		//check if requireditemsFound is true
+		if (RequiredItemsFound[i])
+		{
+			//check if the item is the same as the required item
+			if (RequiredItems[i] == Item)
+				return true;
+		}
+		/*bool Value;
 		if (DataManager->GetValueForKey(RequiredItems[i], Value))
 		{
 			if (RequiredItems[i] == Item)
 				return Value;
-		}
+		}*/
 	}
 	return false;
 }
@@ -288,15 +306,36 @@ void AArcticAnomalyGameCharacter::ItemInteraction()
 	{
 		if (Inventory->AddItem(CurrentItemPickup->Item))
 		{
+			//iterate through the required items and set the value to true if the item is the same as the required item
+			for (int i = 0; i < RequiredItems.Num(); i++)
+			{
+				if (RequiredItems[i] == CurrentItemPickup->Item)
+				{
+					RequiredItemsFound[i] = true;
+				}
+			}
+
+			//check if all bools in requiredItemsFound are true
+			bool AllTrue = true;
+			for (int i = 0; i < RequiredItemsFound.Num(); i++)
+			{
+				if (!RequiredItemsFound[i])
+				{
+					AllTrue = false;
+					break;
+				}
+			}
+			HasAllRequiredItems = AllTrue;
+			
 			//find the item in the data manager and set the value to true
-			DataManager->SetValueForKey(CurrentItemPickup->Item, true);
+			/*DataManager->SetValueForKey(CurrentItemPickup->Item, true);
 
 			//log if all items are true
 			bool AllTrue;
 			DataManager->AllValuesTrue(AllTrue);
 			UE_LOG(LogTemp, Warning, TEXT("AllTrue: %s"), AllTrue ? TEXT("True") : TEXT("False"));
 			
-			HasAllRequiredItems = AllTrue;
+			HasAllRequiredItems = AllTrue;*/
 		}
 		CurrentItemPickup->Destroy();
 	}

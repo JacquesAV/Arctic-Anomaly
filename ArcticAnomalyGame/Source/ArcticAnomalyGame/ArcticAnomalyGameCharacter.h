@@ -106,11 +106,14 @@ public:
 	AItemPickup* CurrentItemPickup;
 
 	//array of FItemBoolPair
-	UCustomDataManager* DataManager;
+	//UCustomDataManager* DataManager;
 
 	//array of required items
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
 	TArray<UItem*> RequiredItems;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
+	TArray<bool> RequiredItemsFound;
 	
 	/*inspectable actions*/
 	UPROPERTY(EditAnywhere)
@@ -141,7 +144,7 @@ public:
 	FCollisionResponseParams DefaultResponseParams;
 
 	bool HasAllRequiredItems;
-
+	
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
