@@ -34,5 +34,5 @@ public:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* BoxCollider;
 
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 };

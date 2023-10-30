@@ -7,10 +7,10 @@
 // Sets default values
 AItemPickup::AItemPickup()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent=CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
 	//Create the box collider
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
@@ -35,12 +35,11 @@ void AItemPickup::BeginPlay()
 void AItemPickup::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AItemPickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	//Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	if (PropertyChangedEvent.Property)
 	{
@@ -53,4 +52,3 @@ void AItemPickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 		}
 	}
 }
-

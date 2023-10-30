@@ -37,9 +37,10 @@ void AWaypointNode::Tick(float DeltaTime)
 	DebugVisuals();
 }
 
-#if WITH_EDITOR
+
 void AWaypointNode::DebugVisuals() const
 {
+#if WITH_EDITOR
 	if (!GWorld->IsGameWorld() || (GWorld->IsGameWorld() && bDebugInPlay))
 	{
 		FColor Color = IsSpawnPoint ? Color = FColor::Green : FColor::Cyan;
@@ -60,11 +61,12 @@ void AWaypointNode::DebugVisuals() const
 			}
 		}
 	}
+#endif
 }
 
 // TODO: Disable ticks in game builds.
-bool AWaypointNode::ShouldTickIfViewportsOnly() const
+/*bool AWaypointNode::ShouldTickIfViewportsOnly() const
 {
 	return true;
-}
-#endif
+}*/
+

@@ -39,7 +39,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Collider")
 	UBoxComponent* ColliderComponent;
 
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 
 	UPROPERTY(VisibleAnywhere, Category = "Box Comps")
 	UBoxComponent* BoxComp;
