@@ -37,7 +37,6 @@ void AWaypointNode::Tick(float DeltaTime)
 	DebugVisuals();
 }
 
-
 void AWaypointNode::DebugVisuals() const
 {
 #if WITH_EDITOR
@@ -64,9 +63,9 @@ void AWaypointNode::DebugVisuals() const
 #endif
 }
 
-// TODO: Disable ticks in game builds.
-/*bool AWaypointNode::ShouldTickIfViewportsOnly() const
+// TODO: Disable this method entirely in game builds.
+bool AWaypointNode::ShouldTickIfViewportsOnly() const
 {
 	return true;
-}*/
+}
 

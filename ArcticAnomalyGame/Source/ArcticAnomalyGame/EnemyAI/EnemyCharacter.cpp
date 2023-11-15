@@ -300,7 +300,6 @@ void AEnemyCharacter::FollowWaypoints()
 				else
 				{
 					// If not respawning after patrolling, clean the visited nodes and return.
-					// TODO: Have a visit count on the waypoints instead to avoid this issue and to make a more robust system.
 					WaypointManager->ResetVisits();
 				}
 				return;
@@ -313,7 +312,7 @@ void AEnemyCharacter::FollowWaypoints()
 				WaypointManager->UpdateTargetWaypoint(NextWaypoint);
 			}
 		}
-
+		
 		// Move to the target waypoint using navmesh pathfinding if it is valid.
 		if (WaypointManager->TargetWaypoint)
 		{

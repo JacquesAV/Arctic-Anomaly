@@ -42,6 +42,8 @@ void AWaypointManager::UpdateSpawnPoints()
 	}
 }
 
+// TODO: Implement improved logic to potentially ignore hanging nodes with no further connected waypoints.
+// TODO: This would make the AI more "intelligent" and less likely to make odd loops over enough time.
 AWaypointNode* AWaypointManager::GetNextWaypoint(const AWaypointNode* CurrentWaypoint) const
 {
 	if (!CurrentWaypoint)
@@ -50,17 +52,32 @@ AWaypointNode* AWaypointManager::GetNextWaypoint(const AWaypointNode* CurrentWay
 		return nullptr;
 	}
 	
+	// Create arrays to store waypoints that will be managed shortly.
+	TArray<FVisitedWaypointHolder> VisitedConnectedWaypoints;
 	TArray<AWaypointNode*> UnvisitedConnectedWaypoints;
 	
 	// Fetch connected waypoints from the input waypoint.
 	TArray<AWaypointNode*> ConnectedWaypoints = CurrentWaypoint->ConnectedWaypoints;
 	
 	// Iterate through the connected waypoints to find unvisited ones.
-	for (AWaypointNode* Waypoint : ConnectedWaypoints)
+	for (AWaypointNode* CheckedWaypoint : ConnectedWaypoints)
 	{
-		if (!RecentlyVisitedNodes.Contains(Waypoint))
+		// Check if the waypoint has already been visited recently.
+		bool bContainsWaypoint = false;
+		for (FVisitedWaypointHolder VisitedWaypointHolder : RecentlyVisitedNodes)
 		{
-			UnvisitedConnectedWaypoints.Add(Waypoint);
+			if(VisitedWaypointHolder.Waypoint == CheckedWaypoint && VisitedWaypointHolder.Waypoint != CurrentWaypoint)
+			{
+				VisitedConnectedWaypoints.Add(VisitedWaypointHolder);
+				bContainsWaypoint = true;
+				break;
+			}
+		}
+		
+		// Add if the waypoint is not in the recently visited nodes array.
+		if(!bContainsWaypoint)
+		{
+			UnvisitedConnectedWaypoints.Add(CheckedWaypoint);
 		}
 	}
 	
@@ -70,14 +87,36 @@ AWaypointNode* AWaypointManager::GetNextWaypoint(const AWaypointNode* CurrentWay
 		return GetRandomNode(UnvisitedConnectedWaypoints);
 	}
 	
-	// If all connected waypoints are visited, select one randomly from all connected waypoints.
-	if (ConnectedWaypoints.Num() > 0)
+	// If there are no unvisited connected waypoints, sort the recently visited nodes array and select the lowest.
+	if (VisitedConnectedWaypoints.Num() > 0)
 	{
+		VisitedConnectedWaypoints.Sort(SortByLowestVisit);
+		return VisitedConnectedWaypoints[0].Waypoint;
+	}
+	
+	// If the previous two conditions are not met, default to a random connected waypoint and throw a warning.
+	if (CurrentWaypoint->ConnectedWaypoints.Num() > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Encountered issue in waypoint fetching for waypoint %s, defaulting to random connected waypoint!"), *CurrentWaypoint->GetName());
 		return GetRandomNode(ConnectedWaypoints);
 	}
 	
 	// No connected waypoints are available.
+	UE_LOG(LogTemp, Warning, TEXT("Encountered issue in waypoint fetching for waypoint %s, returning with nullptr!"), *CurrentWaypoint->GetName());
 	return nullptr;
+}
+
+// Returns true if ItemA has less visits than ItemB, with some randomness for equal visit counts.
+bool AWaypointManager::SortByLowestVisit(const FVisitedWaypointHolder& ItemA, const FVisitedWaypointHolder& ItemB)
+{
+	// If visit counts are equal, introduce randomness by shuffling.
+	if (ItemA.VisitCount == ItemB.VisitCount)
+	{
+		return FMath::RandBool();
+	}
+	
+	// Compare visit counts and choose the lowest.
+	return ItemA.VisitCount < ItemB.VisitCount;
 }
 
 // Update the target waypoint.
@@ -103,7 +142,17 @@ void AWaypointManager::AddNodeToRecentlyVisited(AWaypointNode* NodeToAdd)
 {
 	if (NodeToAdd)
 	{
-		RecentlyVisitedNodes.Add(NodeToAdd);
+		// Check if the waypoint has already been visited recently.
+		for (FVisitedWaypointHolder& VisitedWaypointHolder : RecentlyVisitedNodes)
+		{
+			if(VisitedWaypointHolder.Waypoint == NodeToAdd)
+			{
+				VisitedWaypointHolder.VisitCount++;
+				return;
+			}
+		}
+		// Otherwise, add it to the array.
+		RecentlyVisitedNodes.Add(FVisitedWaypointHolder{NodeToAdd, 1});
 	}
 }
 

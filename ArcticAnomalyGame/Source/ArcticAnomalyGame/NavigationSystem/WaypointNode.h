@@ -24,7 +24,9 @@ public:
 	// Called every frame.
 	virtual void Tick(float DeltaTime) override;
 	void DebugVisuals() const;
-	//virtual bool ShouldTickIfViewportsOnly() const override;
+	
+	// TODO: Disable this method entirely in game builds.
+	virtual bool ShouldTickIfViewportsOnly() const override;
 
 	// Gives a transform to the waypoint node.
 	UPROPERTY()

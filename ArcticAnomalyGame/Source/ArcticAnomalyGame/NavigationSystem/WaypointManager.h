@@ -5,12 +5,27 @@
 #include "WaypointNode.h"
 #include "WaypointManager.generated.h"
 
+USTRUCT(BlueprintType)
+struct FVisitedWaypointHolder
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waypointing")
+	AWaypointNode* Waypoint;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waypointing")
+	int32 VisitCount;
+};
+
 //TODO: Modify into being a component instead of a standalone actor.
 UCLASS()
 class ARCTICANOMALYGAME_API AWaypointManager : public AActor
 {
 	GENERATED_BODY()
 
+private:
+	static bool SortByLowestVisit(const FVisitedWaypointHolder& ItemA, const FVisitedWaypointHolder& ItemB);
+	
 public:
 	// Constructor
 	AWaypointManager();
@@ -33,17 +48,17 @@ public:
 	// Array to store references to spawn points.
 	UPROPERTY(EditAnywhere, Category = "Waypointing")
 	TArray<AWaypointNode*> SpawnPoints;
-
+	
 	// Array to store references to spawn points.
 	UPROPERTY(EditAnywhere, Category = "Waypointing")
-	TArray<AWaypointNode*> RecentlyVisitedNodes;
+	TArray<FVisitedWaypointHolder> RecentlyVisitedNodes;
 	
 	// Function to get the next waypoint based on your logic
 	UFUNCTION(BlueprintCallable, Category = "Waypointing")
 	AWaypointNode* GetNextWaypoint(const AWaypointNode* CurrentWaypoint) const;
 	void UpdateTargetWaypoint(AWaypointNode* NewTargetWaypoint);
 	void UpdateOriginWaypoint(AWaypointNode* NewOriginWaypoint);
-
+	
 	void ResetVisits();
 	void AddNodeToRecentlyVisited(AWaypointNode* NodeToAdd);
 	
