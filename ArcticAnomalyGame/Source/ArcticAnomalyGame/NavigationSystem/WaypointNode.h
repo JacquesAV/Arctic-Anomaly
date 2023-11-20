@@ -25,6 +25,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void DebugVisuals() const;
 	
+	// Connects waypoints bidirectionally in-editor for ease of linking.
+	// TODO: Implement method.
+	UFUNCTION(CallInEditor, Category = "Waypointing")
+	static void ConnectWaypointsBidirectionally();
+	
 	// TODO: Disable this method entirely in game builds.
 	virtual bool ShouldTickIfViewportsOnly() const override;
 
