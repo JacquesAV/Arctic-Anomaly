@@ -63,12 +63,6 @@ void AWaypointNode::DebugVisuals() const
 #endif
 }
 
-void AWaypointNode::ConnectWaypointsBidirectionally()
-{
-	// TODO: Implement logic to automatically link waypoints in both directions.
-	UE_LOG(LogTemp, Warning, TEXT("ConnectWaypointsBidirectionally() called!"));
-}
-
 // TODO: Disable this method entirely in game builds.
 bool AWaypointNode::ShouldTickIfViewportsOnly() const
 {
